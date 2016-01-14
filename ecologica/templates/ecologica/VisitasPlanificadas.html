@@ -1,0 +1,96 @@
+{% extends "ecologica/index.html" %}
+{% load i18n admin_static %}
+
+{% block title %}Producción Ecológica|Visitas Planificadas{% endblock %}
+
+{% block extrascripts %}
+<script src="{% static 'js/Modulos/Visitas.js' %}"></script>
+{% endblock %}
+
+{% load i18n %}
+{% load index %}
+
+{% block breadcrumbs %}
+			<div class="row panel panel-default">
+			<div class="panel-heading">
+			  <div class="row ">
+			  <div class="container-fluid">
+				<div class="navbar-header">
+					<ul class="breadcrumb">
+					  <li><a id="breadmio" href="{% url 'ecologica:index' %}">Dashboard</a></li>  
+					  <li class="active"><strong>Visitas Planificadas</strong></li>
+					</ul>
+				</div>
+				</div>
+			</div>
+			</div>
+			</div>
+
+{% endblock %}
+
+
+{% block content %}
+<div class="row" ng-app="Visitas">
+	<div class="col-lg-12" ng-controller="VisitasPlanificadas" ng-init="inicia()">
+
+		
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<div class="form-inline">
+					<label>Visitas Planificadas</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<label>Filtrar por Auditor&nbsp;</label>
+					<select id="selectAuditor" class="form-control" ng-change="cambiaAuditor()" ng-model="AuditorSelect">
+						<option value="">Todos</option>
+						{% for auditor in auditores %}
+						<option value="{{auditor}}">{{auditor}}</option>
+						{% endfor %}
+					</select>
+					
+				</div>
+			</div>
+			<!-- /.panel-heading -->
+
+			<div class="panel-body">
+				<div class="table-responsive">
+
+					<table id="visitasTabla" class="table table-striped table-bordered table-hover">
+						
+						<thead>
+							<tr>
+								<th class="text-center" width="40">#</th>
+								<th>Fecha Visita</th>
+								<th>Tipo Actuación</th>
+								<th>Inspector</th>
+								<th>Cliente</th>
+								<th>Código Expediente</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for visita in visitas %}
+							<tr>
+								<td class="text-center">{{visitas|index:visita.id}}</td>
+								<td>{{visita.f_visita|date:"SHORT_DATE_FORMAT"}}</td>
+								<td>{{visita.actuacion}}</td>
+								<td>{{visita.inspector}}</td>
+								<td><a href="{% url 'ecologica:cliente' visita.expediente.id_cliente.id %}">{{visita.expediente.id_cliente}}</a></td>
+								<td><a href="{% url 'ecologica:expediente' visita.expediente.id %}">{{visita.expediente.CodOperador}}</a></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+					
+
+				</div>
+			</div>
+			
+		</div>
+		
+		</div>
+	</div>
+{% endblock %}
+		
+
+
+
+
+

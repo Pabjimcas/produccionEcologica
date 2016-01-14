@@ -1,0 +1,195 @@
+{% extends "ecologica/index.html" %}
+{% load i18n admin_static %}
+
+{% block title %}Producción Ecológica|Expedientes en Vigor{% endblock %}
+
+{% block extrascripts %}
+<script src="{% static 'js/Modulos/Expedientes.js' %}"></script>
+{% endblock %}
+
+{% load i18n %}
+{% load index %}
+
+{% block breadcrumbs %}
+			<div class="row panel panel-default">
+			<div class="panel-heading">
+			  <div class="row ">
+			  <div class="container-fluid">
+				<div class="navbar-header">
+					<ul class="breadcrumb">
+					  <li><a id="breadmio" href="{% url 'ecologica:index' %}">Dashboard</a></li>  
+					  <li class="active"><strong>Expedientes en Vigor</strong></li>
+					</ul>
+				</div>
+				</div>
+			</div>
+			</div>
+			</div>
+
+{% endblock %}
+
+
+{% block content %}
+<div class="row" ng-app="Expedientes">
+	<div class="col-lg-12">
+		<section ng-controller="ListaExpedientes">
+		<ul class="nav nav-tabs" role="tablist">
+		  <li role="presentation" class="active"><a href="#AE" aria-controls="AE" role="tab" data-toggle="tab">Agricultura Ecológica</a></li>
+		  <li role="presentation"><a href="#GA" aria-controls="GA" role="tab" data-toggle="tab">Ganadería</a></li>
+		  <li role="presentation"><a href="#IN" aria-controls="IN" role="tab" data-toggle="tab">Industria</a></li>
+		</ul>
+		<div>
+		<div class="tab-content">
+		
+		<div role="tabpanel" class="panel panel-success tab-pane active" id="AE">
+			<div class="panel-heading">
+				<strong>Expedientes Agricultura Ecológica en Vigor</strong> 
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<button type="button" class="btn btn-success" onclick="location.href='/expedientesEnVigor/1'"><i class="fa fa-download"></i> Generar Consulta</button>
+
+				<div class="pull-right"><input type="text" class="form-control" placeholder="Búsqueda..." ng-model="filtro" ng-change="filtraTabla()"></div>
+			</div>
+			<!-- /.panel-heading -->
+
+			<div class="panel-body">
+				{% if lista_expedientesAE %}
+				<div class="table-responsive">
+
+					<table class="table table-striped table-bordered table-hover expedientesTabla">
+						
+						<thead>
+							<tr>
+								<th class="text-center" width="40">#</th>
+								<th>Nombre y Apellidos</th>
+								<th>Código Expediente</th>
+								<th>Teléfono</th>
+								<th>Localidad</th>
+								<th>Técnico Responsable</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for expediente in lista_expedientesAE %}
+							<tr>
+								<td class="text-center">{{lista_expedientesAE|index:expediente.id}}</td>
+								<td><a href="{% url 'ecologica:cliente' expediente.id_cliente.id %}">{{expediente.id_cliente.Nombre}} {{expediente.id_cliente.Apellido1}} {{expediente.id_cliente.Apellido2}}</a></td>
+								<td><a href="{% url 'ecologica:expediente' expediente.id %}">{{expediente.CodOperador}}</a></td>
+								<td>{{expediente.id_cliente.Telefono1}}</td>
+								<td>{{expediente.id_cliente.Municipio}} ({{expediente.id_cliente.Provincia}})</td>
+								<td>{{expediente.responsable}}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+					
+
+				</div>
+				{% else %}
+				No existen expedientes de Agricultura Ecológica
+				{% endif %}
+			</div>
+			
+		</div>
+		
+		<div role="tabpanel" class="panel panel-warning tab-pane" id="GA">
+			<div class="panel-heading">
+				<strong>Expedientes Ganadería en Vigor</strong>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<button type="button" class="btn btn-warning" onclick="location.href='/expedientesEnVigor/2'"><i class="fa fa-download"></i> Generar Consulta</button>
+				<div class="pull-right"><input type="text" class="form-control" placeholder="Búsqueda..." ng-model="filtro" ng-change="filtraTabla()"></div>
+			</div>
+			<!-- /.panel-heading -->
+
+			<div class="panel-body">
+				{% if lista_expedientesGA %}
+				<div class="table-responsive">
+
+					<table class="table table-striped table-bordered table-hover expedientesTabla">
+						
+						<thead>
+							<tr>
+								<th class="text-center" width="40">#</th>
+								<th>Nombre y Apellidos</th>
+								<th>Código Expediente</th>
+								<th>Teléfono</th>
+								<th>Localidad</th>	
+								<th>Técnico Responsable</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for expediente in lista_expedientesGA %}
+							<tr>
+								<td class="text-center">{{lista_expedientesGA|index:expediente.id}}</td>
+								<td><a href="{% url 'ecologica:cliente' expediente.id_cliente.id %}">{{expediente.id_cliente.Nombre}} {{expediente.id_cliente.Apellido1}} {{expediente.id_cliente.Apellido2}}</a></td>
+								<td><a href="{% url 'ecologica:expediente' expediente.id %}">{{expediente.CodOperador}}</a></td>
+								<td>{{expediente.id_cliente.Telefono1}}</td>
+								<td>{{expediente.id_cliente.Municipio}} ({{expediente.id_cliente.Provincia}})</td>
+								<td>{{expediente.responsable}}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+					No existen expedientes de ganadería
+				{% endif %}
+
+			</div>
+			
+		</div>
+		
+		<div role="tabpanel" class="panel panel-info tab-pane" id="IN">
+			<div class="panel-heading">
+				<strong>Expedientes Industria</strong>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<button type="button" class="btn btn-info" onclick="location.href='/expedientesEnVigor/3'"><i class="fa fa-download"></i> Generar Consulta</button>
+			</div>
+			<!-- /.panel-heading -->
+
+			<div class="panel-body">
+				{% if lista_expedientesND %}
+				<div class="table-responsive">
+
+					<table class="table table-striped table-bordered table-hover expedientesTabla">
+						
+						<thead>
+							<tr>
+								<th class="text-center" width="40">#</th>
+								<th>Nombre y Apellidos</th>
+								<th>Código Expediente</th>
+								<th>Teléfono</th>
+								<th>Localidad</th>	
+								<th>Técnico Responsable</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for expediente in lista_expedientesND %}
+							<tr>
+								<td class="text-center">{{lista_expedientesND|index:expediente.id}}</td>
+								<td><a href="{% url 'ecologica:cliente' expediente.id_cliente.id %}">{{expediente.id_cliente.Nombre}} {{expediente.id_cliente.Apellido1}} {{expediente.id_cliente.Apellido2}}</a></td>
+								<td><a href="{% url 'ecologica:expediente' expediente.id %}">{{expediente.CodOperador}}</a></td>
+								<td>{{expediente.id_cliente.Telefono1}}</td>
+								<td>{{expediente.id_cliente.Municipio}} ({{expediente.id_cliente.Provincia}})</td>
+								<td>{{expediente.responsable}}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+					No existen expedientes de industria
+				{% endif %}
+			</div>
+		</div>
+		</div>
+		</section>
+	</div>
+
+	
+</div>
+{% endblock %}
+		
+
+
+
+
+

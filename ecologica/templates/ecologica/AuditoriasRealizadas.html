@@ -1,0 +1,120 @@
+{% extends "ecologica/index.html" %}
+{% load i18n admin_static %}
+
+{% block title %}Producción Ecológica|Auditorías{% endblock %}
+
+{% block extrascripts %}
+<script src="{% static 'js/Modulos/Visitas.js' %}"></script>
+{% endblock %}
+
+{% load i18n %}
+{% load index %}
+
+{% block breadcrumbs %}
+			<div class="row panel panel-default">
+			<div class="panel-heading">
+			  <div class="row ">
+			  <div class="container-fluid">
+				<div class="navbar-header">
+					<ul class="breadcrumb">
+					  <li><a id="breadmio" href="{% url 'ecologica:index' %}">Dashboard</a></li>  
+					  <li class="active"><strong>Auditorías</strong></li>
+					</ul>
+				</div>
+				</div>
+			</div>
+			</div>
+			</div>
+
+{% endblock %}
+
+
+{% block content %}
+<div class="row" ng-app="Visitas">
+	<div class="col-lg-12" ng-controller="VisitasPlanificadas" ng-init="inicia2()">
+
+		
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<div class="form-inline">
+					<label>Auditorías</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<label>Filtrar por Auditor&nbsp;</label>
+					<select id="selectAuditor" class="form-control" ng-change="cambiaAuditor2()" ng-model="AuditorSelect">
+						<option value="">Todos</option>
+						{% for auditor in auditores %}
+						<option value="{{auditor}}">{{auditor}}</option>
+						{% endfor %}
+					</select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<label>Precisa PAC&nbsp;</label>
+					<select id="selectPAC" class="form-control" ng-change="cambiaPAC()" ng-model="PACSelect">
+						<option value="">-</option>
+						<option value="SI">SI</option>
+						<option value="NO">NO</option>
+					</select>
+					
+				</div>
+			</div>
+			<!-- /.panel-heading -->
+
+			<div class="panel-body">
+				<div class="table-responsive">
+
+					<table id="visitasTabla" class="table table-striped table-bordered table-hover">
+						
+						<thead>
+							<tr>
+								<th class="text-center" width="40">#</th>
+								<th>Fecha Auditoría</th>
+								<th>Auditor</th>
+								<th>Cliente</th>
+								<th>Código Expediente</th>
+								<th class="text-center">Precisa PAC</th>
+								<th class="text-center">Recibe PAC</th>
+								<th class="text-center">PAC Evaluado</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for auditoria in auditorias %}
+							<tr>
+								<td class="text-center">{{auditorias|index:auditoria.id}}</td>
+								<td>{{auditoria.f_Auditoria|date:"SHORT_DATE_FORMAT"}}</td>
+								<td>{{auditoria.visita.inspector}}</td>
+								<td><a href="{% url 'ecologica:cliente' auditoria.visita.expediente.id_cliente.id %}">{{auditoria.visita.expediente.id_cliente}}</a></td>
+								<td><a href="{% url 'ecologica:expediente' auditoria.visita.expediente.id %}">{{auditoria.visita.expediente.CodOperador}}</a></td>
+								<td class="text-center">{{auditoria.solicita_PAC}}</td>
+								<td class="text-center">{% with cont=auditoria.accionesCorrectivas.count %}
+										{% if cont > 0 %}
+											SI
+										{% else %}
+											NO
+										{% endif %}
+									{% endwith %}
+								</td>
+								<td class="text-center">{% if auditoria.Evaluado %}
+										{% if auditoria.Evaluado == 'CONFORME' %}
+										<strong class="text-success">{{auditoria.Evaluado}}</strong>
+										{% else %}
+										<strong class="text-danger">{{auditoria.Evaluado}}</strong>
+										{% endif %}
+									{% endif %}
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+					
+
+				</div>
+			</div>
+			
+		</div>
+		
+		</div>
+	</div>
+{% endblock %}
+		
+
+
+
+
+

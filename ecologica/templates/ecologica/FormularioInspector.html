@@ -1,0 +1,533 @@
+{% extends "ecologica/index.html" %}
+{% load i18n admin_static %}
+
+{% block title %}Producción Ecológica|Nuevo inspector{% endblock %}
+
+{% block extrastyle %}
+
+<style type="text/css">
+	  .css-form input.ng-invalid.ng-touched {
+		background-color: #FA787E;
+	  }
+
+	  .css-form input.ng-valid.ng-touched {
+		background-color: #78FA89;
+	  }
+	  .css-form select.ng-invalid.ng-touched {
+		background-color: #FA787E;
+	  }
+
+	  .css-form select.ng-valid.ng-touched {
+		background-color: #78FA89;
+	  }
+</style>
+
+{% endblock %}
+
+{% block extrascripts %}
+<script src="{% static 'js/Modulos/Inspector.js' %}"></script>
+{% endblock %}
+
+{% load i18n %}
+
+{% block breadcrumbs %}
+			<div class="row panel panel-default">
+			<div class="panel-heading">
+			  <div class="row ">
+			  <div class="container-fluid">
+				<div class="navbar-header">
+					<ul class="breadcrumb">
+					  <li><a id="breadmio" href="{% url 'ecologica:index' %}">Dashboard</a></li> 
+					  <li class="active"><strong>Nuevo inspector</strong></li>
+					</ul>
+				</div>
+				</div>
+			</div>
+			</div>
+			</div>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="row" ng-app="Inspector">
+	<div class="col-lg-12" ng-controller = "InspectorController">
+		<form id="formularioInspector"class="css-form" name="InspectorForm" role="form" action="." method="POST">{% csrf_token %}
+		<div class="panel panel-primary">
+			<div class="panel-heading">
+				<strong>Nuevo Inspector</strong>
+			</div>
+			<!-- /.panel-heading -->
+			<div class="panel-body">
+				<div class="row">
+					
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label>NIF*</label>
+								<input class="form-control" ng-class="[has-error]" name="nif" ng-model="nif" required ng-minlength=9 ng-maxlength=9 nifcif>
+								<div class="error-container" ng-show="InspectorForm.nif.$dirty && InspectorForm.nif.$invalid">
+									<small class="error text-danger" ng-show="InspectorForm.nif.$error.required">El nif es requerido</small>
+									<small class="error text-danger" ng-show="InspectorForm.nif.$error.nifcif">El nif no es correcto</small>
+								</div>
+							</div>
+						</div>
+
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Nombre*</label>
+								<input class="form-control" name="nombre" ng-model="nombre" required ng-minlength=3>
+								<div class="error-container" ng-show="InspectorForm.nombre.$dirty && InspectorForm.nombre.$invalid">
+									<small class="error text-danger" ng-show="InspectorForm.nombre.$error.required">El nombre es requerido</small>
+									<small class="error text-danger" ng-show="InspectorForm.nombre.$error.minlength">El nombre debe tener mínimo 3 caracteres</small>
+								</div>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Apellido1</label>
+								<input class="form-control" name="apellido1" ng-model="apellido1"ng-minlength=3>
+								<div class="error-container" ng-show="InspectorForm.apellido1.$dirty && InspectorForm.apellido1.$invalid">
+									<small class="error text-danger" ng-show="InspectorForm.apellido1.$error.minlength">El apellido debe tener mínimo 3 caracteres</small>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Apellido2</label>
+								<input class="form-control" name="apellido2"ng-model="apellido2">
+								<div class="error-container" ng-show="InspectorForm.apellido2.$dirty && InspectorForm.apellido2.$invalid">
+									<small class="error text-danger" ng-show="InspectorForm.apellido2.$error.minlength">El apellido debe tener mínimo 3 caracteres</small>
+								</div>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Teléfono1</label>
+								<input class="form-control" name="telefono1" ng-model="tel1" pattern="^[9|8|7|6]\d{8}$">
+								<div class="error-container" ng-show="InspectorForm.telefono1.$dirty && InspectorForm.telefono1.$invalid">
+									<small class="error text-danger" ng-show="InspectorForm.telefono1.$error.pattern">El teléfono no es correcto</small>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Teléfono2</label>
+								<input class="form-control" name="telefono2" ng-model="tel2" pattern="^[9|8|7|6]\d{8}$">
+								<small class="error text-danger" ng-show="InspectorForm.telefono2.$error.pattern">El teléfono no es correcto</small>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Rol*</label>
+								<select id="tipoAg" class="form-control" name="tipoAg" ng-model="rol" ng-change="seleccionaValores()" required>
+									<option value="A">Auditor</option>
+									<option value="R">Técnico Responsable</option>
+									<option value="G">Gestor</option>
+								</select>
+								
+							</div>
+						</div>
+
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>¿Es usuario?*</label>
+								<select id="usuario" class="form-control" name="usuario" ng-model="usuario" ng-change="cambiaUsuario()" required>
+									<option value="SI">Si</option>
+									<option value="NO">No</option>
+								</select>
+								
+							</div>
+						</div>
+						<div class="col-lg-12" ng-show="usuario == 'NO'">
+							<div class=" pull-right">
+								<button type="button" class="btn btn-primary" ng-click="noUsuario()">Guardar</button>
+							</div>
+						</div>
+					
+				</div>
+			   
+			</div>
+		</div>
+		
+		<div class="collapse panel panel-primary">
+			<div class="panel-heading">
+				<strong>Datos Usuario</strong>
+			</div>
+			<!-- /.panel-heading -->
+			<div class="panel-body">
+				<div class="row">
+					
+						<div class="col-lg-6" ng-show="rol">
+						<div role="tabpanel" class="tab-pane" id="Roles" >
+							<ul class="nav nav-tabs" role="tablist">
+								  <li role="presentation" class="active"><a href="#inspector" aria-controls="Visit" role="tab" data-toggle="tab" ng-show="rol == 'A'">Auditor</a>
+																		 <a href="#inspector" aria-controls="Visit" role="tab" data-toggle="tab" ng-show="rol == 'R'">Técnico Responsable</a>
+																		 <a href="#inspector" aria-controls="Visit" role="tab" data-toggle="tab" ng-show="rol == 'G'">Gestor</a></li>
+								  <li role="presentation" ng-show="rol != 'A'"><a href="#archivos" aria-controls="archivos" role="tab" data-toggle="tab">Generación de Archivos</a></li>
+							</ul>
+							</br>
+							<div class="tab-content">
+								<div role="tabpanel" class="tab-pane active" id="inspector" >
+									<div class="table-responsive">
+
+									<table class="table table-striped table-bordered table-hover">
+										
+										<thead>
+											<tr>
+												<th></th>
+												<th class="text-center">Consulta</th>
+												<th class="text-center">Modifica</th>
+												<th class="text-center">Crea</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr ng-show="rol != 'A'">
+												<td>Clientes</td>
+												<td><select class="form-control" name="consclient" ng-model="consclient">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modclient" ng-model="modclient">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creaclient" ng-model="creaclient">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr ng-show="rol != 'A'">
+												<td>Expedientes</td>
+												<td><select class="form-control" name="consexpedientes" ng-model="consexpedientes">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modexpedientes" ng-model="modexpedientes">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creaexpedientes" ng-model="creaexpedientes">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr ng-show="rol != 'A'">
+												<td>Facturación</td>
+												<td><select class="form-control" name="consfact" ng-model="consfact">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modfact" ng-model="modfact">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creafact" ng-model="creafact">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr ng-show="rol == 'A'">
+												<td>Datos Expediente</td>
+												<td><select class="form-control" name="consexp" ng-model="consexp">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modexp" ng-model="modexp">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td>
+												</td>
+											</tr>
+											<tr>
+												<td>Contactos</td>
+												<td><select class="form-control" name="conscont" ng-model="conscont">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modcont" ng-model="modcont">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creacont" ng-model="creacont">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<td>Interlocutores</td>
+												<td><select class="form-control" name="consinter" ng-model="consinter">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modinter" ng-model="modinter">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creainter" ng-model="creainter">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<td>Parcelas</td>
+												<td><select class="form-control" name="consparc" ng-model="consparc">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modparc" ng-model="modparc">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creaparc" ng-model="creaparc">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<td>Visitas Realizadas</td>
+												<td><select class="form-control" name="consvis" ng-model="consvis">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modvis" ng-model="modvis">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td>
+												</td>
+											</tr>
+											<tr ng-show="rol == 'A'">
+												<td>Planifica Visitas</td>
+												<td><select class="form-control" name="consplan" ng-model="consplan">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modplan" ng-model="modplan">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creaplan" ng-model="creaplan">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr ng-show="rol != 'A'">
+												<td>Visitas Planificadas</td>
+												<td><select class="form-control" name="consvisplan" ng-model="consvisplan">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modvisplan" ng-model="modvisplan">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creavisplan" ng-model="creavisplan">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr ng-show="rol != 'A'">
+												<td>Auditorías</td>
+												<td><select class="form-control" name="consaudi" ng-model="consaudi">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modaudi" ng-model="modaudi">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creaaudi" ng-model="creaaudi">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr ng-show="rol != 'A' && rol != 'R'">
+												<td>Certifica</td>
+												<td><select class="form-control" name="conscer" ng-model="conscer">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modcer" ng-model="modcer">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creacer" ng-model="creacer">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<td>Evaluación de Riesgos</td>
+												<td><select class="form-control" name="consriesgo" ng-model="consriesgo">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modriesgo" ng-model="modriesgo">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creariesgo" ng-model="creariesgo">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr ng-show="rol != 'A' && rol != 'R'">
+												<td>Inspectores</td>
+												<td><select class="form-control" name="consins" ng-model="consins">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="modins" ng-model="modins">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+												<td><select class="form-control" name="creains" ng-model="creains">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											
+										</tbody>
+									</table>
+								</div>
+								</div>
+								<div role="tabpanel" class="tab-pane" id="archivos" ng-show="rol != 'A'"> 
+									<div class="table-responsive">
+
+									<table class="table table-striped table-bordered table-hover">
+										
+										<thead>
+											<tr>
+												<th></th>
+												<th class="text-center">Genera</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>Archivos SIPEA</td>
+												<td><select class="form-control" name="gensip" ng-model="gensip">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<td>Consulta Nuevos Clientes</td>
+												<td><select class="form-control" name="gencli" ng-model="gencli">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<td>Expedientes Facturados</td>
+												<td><select class="form-control" name="genfac" ng-model="genfac">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<td>Expedientes en Vigor</td>
+												<td><select class="form-control" name="genclient" ng-model="genclient">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<td>Certificado</td>
+												<td><select class="form-control" name="gencer" ng-model="gencer">
+														<option value="SI">Si</option>
+														<option value="NO">No</option>
+													</select>
+												</td>
+											</tr>
+											
+											
+										</tbody>
+									</table>
+								</div>
+								</div>
+							</div>
+						</div>
+						</div>
+						<div class="col-lg-12 col-lg-6">
+							<div class="form-group">
+								<label>Usuario*</label>
+								<input class="form-control"  name="cuenta" ng-model="cuenta">
+								</br>
+								<label>Contraseña*</label>
+								<input type="password" size="25" class="form-control" name="password" ng-model="password">
+								</br>
+								<label>E-mail</label>
+								<input type="email" name="email" class="form-control"placeholder="Ej. persona@empresa.com" ng-model="email">
+								<small class="error text-danger" ng-show="InspectorForm.email.$error.email">El email no es correcto</small>
+								</br>
+								<div class="col-lg-12">
+									<div class=" pull-right">
+										<button type="submit" class="btn btn-primary">Guardar</button>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+				</div>					
+			   
+			</div>
+			
+			
+		</div>
+		
+			
+		
+		</form>
+	</div>
+</div>
+{% endblock %}
+

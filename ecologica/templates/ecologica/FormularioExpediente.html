@@ -1,0 +1,1359 @@
+{% extends "ecologica/index.html" %}
+{% load i18n admin_static %}
+
+{% block title %}Producción Ecológica|Nuevo Expediente{% endblock %}
+
+{% block extrascripts %}
+<script src="{% static 'js/Modulos/NuevoExpediente.js' %}"></script>
+{% endblock %}
+
+{% block extrastyle %}
+
+<style type="text/css">
+	  .css-form input.ng-invalid.ng-touched {
+		background-color: #FA787E;
+	  }
+
+	  .css-form input.ng-valid.ng-touched {
+		background-color: #78FA89;
+	  }
+	  .css-form select.ng-invalid.ng-touched {
+		background-color: #FA787E;
+	  }
+
+	  .css-form select.ng-valid.ng-touched {
+		background-color: #78FA89;
+	  }
+</style>
+
+{% endblock %}
+
+{% load i18n %}
+
+{% block breadcrumbs %}
+			<div class="row panel panel-default">
+			<div class="panel-heading">
+			  <div class="row ">
+			  <div class="container-fluid">
+				<div class="navbar-header">
+					<ul class="breadcrumb">
+					  <li><a id="breadmio" href="{% url 'ecologica:index' %}">Dashboard</a></li>
+					   <li><a id="breadmio" href="{% url 'ecologica:clientes' %}">Clientes</a></li>
+						<li><a id="breadmio" href="{% url 'ecologica:cliente' cliente.id %}">{{cliente.nifcif}}</a></li>						   
+					  <li class="active"><strong>Nuevo expediente</strong></li>
+					</ul>
+				</div>
+				</div>
+			</div>
+			</div>
+			</div>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="row" ng-app="NuevoExpediente">
+	<section ng-controller="PanelController as panel">
+	<div class="panel panel-default" ng-controller="CreaExpediente" ng-init="inicia('{{ultimo}}')">
+		<div class="panel-heading">
+			<ul class="nav nav-tabs">
+			  <li ng-class="{ active:panel.isSelected(1)}"><a href ng-click="panel.selectTab(1)">Nuevo expediente</a></li>
+			  <li role="presentation" ng-class="{ active:panel.isSelected(2)}" ng-show="siguiente"><a href ng-click="panel.selectTab(2)"> Contactos</a></li>
+			  <li role="presentation" ng-class="{ active:panel.isSelected(3)}" ng-show="siguiente"><a href ng-click="panel.selectTab(3)"> Interlocutores</a></li>
+			  <li role="presentation" ng-class="{ active:panel.isSelected(4)}" ng-show="siguiente && (tipoAgricultura == 'AE' || tipoAgricultura == 'GA')"><a href ng-click="panel.selectTab(4)"> Parcelas</a></li>
+			  <li role="presentation" ng-class="{ active:panel.isSelected(4)}" ng-show="siguiente && tipoAgricultura == 'IN'"><a href ng-click="panel.selectTab(4)"> Producto Industrial</a></li>
+			</ul>
+		</div>
+		<div class="panel-body">
+		<div class="panel" ng-show="panel.isSelected(1)">
+		
+		
+		<div class="panel panel-warning">
+			<div class="panel-heading">
+				<strong>Nuevo Expediente</strong>
+			</div>
+			<!-- /.panel-heading -->
+			<div class="panel-body">
+			
+				<div class="row">
+					<form id="formularioExpediente"class="css-form" name="ExpedienteForm" role="form" action="." method="POST">{% csrf_token %}
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Tipo de expediente*</label>
+								<select id="tipoAg" class="form-control" name="tipoAg" ng-model="tipoAgricultura" ng-change="modificaTipo('{{ultimo}}')" required>
+									<option value="AE">Agricultura Ecológica</option>
+									<option value="GA">Ganadería</option>
+									<option value="IN">Industria</option>
+								</select>
+								<div class="error-container" ng-show="ExpedienteForm.tipoAg.$dirty && ExpedienteForm.tipoAg.$invalid">
+									<small class="error text-danger" ng-show="ExpedienteForm.tipoAg.$error.required">El tipo de Agricultura es requerido</small>
+								</div>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Técnico Responsable*</label>
+								<select id="responsable" class="form-control" name="responsable" ng-model="responsable" required>
+									{% for responsable in responsables %}
+										<option value="{{responsable.id}}">{{responsable}}</option>
+									{% endfor %}
+								</select>
+								<div class="error-container" ng-show="ExpedienteForm.responsable.$dirty && ExpedienteForm.responsable.$invalid">
+									<small class="error text-danger" ng-show="ExpedienteForm.responsable.$error.required">El técnico responsable es requerido</small>
+								</div>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Inserción de Código</label>
+								<select id="tipoAg" class="form-control" name="tipoAg" ng-model="inser">
+									<option value="1">Automático</option>
+									<option value="2">A mano</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="inser == 2">
+							<div class="form-group">
+								<label for="disabledSelect">Código Expediente</label>
+								<input id="codSipea" class="form-control" ng-model="codExp">
+							</div>
+						</div>
+
+						
+						<div class="col-lg-3" ng-show="inser == 1">
+							<div class="form-group">
+								<label for="disabledSelect">Código Expediente</label>
+								<p class="form-control-static" ng-model="codExp2">AN[[expedienteId]]-[[tipoAgricultura]]-[[anyo]]</p>
+							</div>
+						</div>
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label for="disabledSelect">Código en SIPEA</label>
+								<input id="codSipea" class="form-control" ng-model="codSipea">
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Producción en Paralelo*</label>
+								<select id="pp" class="form-control" name="pp" ng-model="pp" title="Indicador de que el operador presenta producción convencional en paralelo a la ecológica en agricultura" required>
+									<option value="SI">Si</option>
+									<option value="NO">No</option>
+									<option value="NP">Dato desconocido</option>
+								</select>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Forma Jurídica*</label>
+								<select id="fj" class="form-control" name="fj" ng-model="fj" required>
+									<option ng-repeat="foj in formasJ" value="[[foj.id]]">[[foj.Forma_Juridica]]</option>
+								</select>
+								<div class="error-container" ng-show="ExpedienteForm.fj.$dirty && ExpedienteForm.fj.$invalid">
+									<small class="error text-danger" ng-show="ExpedienteForm.fj.$error.required">La forma jurídica es requerida</small>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Fecha de recepción*</label>
+								<input id="frecp" type="date" class="form-control" name="frecp" ng-model="frecp" required>
+								<div class="error-container" ng-show="ExpedienteForm.frecp.$dirty && ExpedienteForm.frecp.$invalid">
+									<small class="error text-danger" ng-show="ExpedienteForm.frecp.$error.required">La fecha de recepción es requerida</small>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Fecha de inscripción*</label>
+								<input id="fins" type="date" class="form-control" name="fins" ng-model="fins" required>
+								<div class="error-container" ng-show="ExpedienteForm.fins.$dirty && ExpedienteForm.fins.$invalid">
+									<small class="error text-danger" ng-show="ExpedienteForm.fins.$error.required">La fecha de inscripción es requerida</small>
+								</div>
+							</div>
+						</div>
+						
+						<div class="col-lg-2" ng-show="estado">
+							<div class="form-group">
+								<label>Estado</label>
+								<select id="estado" class="form-control" name="estado" ng-model="est" required>
+									<option value="ALTA">ALTA</option>
+									<option value="BAJA">BAJA</option>
+								</select>
+							</div>
+						</div>
+						<div class="col-lg-3" ng-show="comprueba(4)">
+							<div class="form-group">
+								<label>Fecha de baja</label>
+								<input id="fbaja" type="date" class="form-control" name="fbaja" ng-model="fbaja" required>
+							</div>
+						</div>
+						<div class="col-lg-2" ng-show="actividad">
+							<div class="form-group">
+								<label>Con actividad</label>
+								<select id="actividad" class="form-control" name="actividad" ng-model="act" required>
+									<option value="SI">SI</option>
+									<option value="NO">NO</option>
+								</select>
+							</div>
+						</div>
+						<div class="col-lg-3" ng-show="comprueba(5)">
+							<div class="form-group">
+								<label>Fecha de cese de actividad</label>
+								<input id="fcact" type="date" class="form-control" name="fcact" ng-model="fcact" required>
+							</div>
+						</div>
+						
+						<div class="col-lg-12">
+						<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+							<div class="panel panel-warning">
+								<div class="panel-heading" role="tab" id="headingOne">
+									<h4 class="panel-title">
+										<a data-toggle="collapse" href="" data-target="#infoAdicional" aria-expanded="false" aria-controls="infoAdicional">
+											<i class="fa fa-plus-circle"></i> Información adicional
+										</a>
+									</h4>
+								</div>
+								<div class="collapse" id="infoAdicional">
+									<div class="panel-body">
+										<div class="col-lg-12">
+											<div class="form-group">
+												<h5>¿Está asociado a alguna <strong>ASOCIACIÓN AGRARIA?</strong>
+												<label class="text-success">SI<input id="asag1" type="radio" ng-model="asag" value="SI"></label>
+												&nbsp;&nbsp;&nbsp;
+												<label class="text-danger">NO<input id="asag2" type="radio" ng-model="asag" value="NO"></label></h5>
+											</div>
+										</div>
+										<div class="col-lg-12" ng-show="comprueba(1)">
+											<div class="form-group">
+												&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+												<label>Indicar<input id="asoc" class="form-control" ng-model="asoc"></label>
+
+											</div>
+										</div>
+											
+										
+										<div class="col-lg-12">
+											<div class="form-group">
+												<h5>¿Es socio de alguna cooperativa?</strong>
+												<label class="text-success">SI<input id="coop1" type="radio" ng-model="coop" value="SI"></label>
+												&nbsp;&nbsp;&nbsp;
+												<label class="text-danger">NO<input id="coop2" type="radio" ng-model="coop" value="NO"></label></h5>
+											</div>
+										</div>
+										<div class="col-lg-12" ng-show="comprueba(2)">
+											<div class="form-group">
+												&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+												<label>Indicar<input id="cooperativa" class="form-control" ng-model="cooperativa"></label>
+												&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+												<label>Persona de contacto (Teléfono)<input id="pc1" class="form-control" ng-model="pc1"></label>
+											</div>
+											
+										</div>
+										<div class="col-lg-12">
+											<div class="form-group">
+												<h5>¿Comercializan a través de una industria?</strong>
+												<label class="text-success">SI<input id="ind1" type="radio" ng-model="ind" value="SI"></label>
+												&nbsp;&nbsp;&nbsp;
+												<label class="text-danger">NO<input id="ind2" type="radio" ng-model="ind" value="NO"></label></h5>
+											</div>
+										</div>
+										<div class="col-lg-12" ng-show="comprueba(3)">
+											<div class="form-group">
+												&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+												<label>Indicar<input id="industria" class="form-control" ng-model="industria"></label>
+												&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+												<label>Persona de contacto (Teléfono)<input id="pc2" class="form-control" ng-model="pc2"></label>
+											</div>
+											
+										</div>
+										<div class="col-lg-12">
+											<div class="form-group">
+												<h5>¿Entidad que le gestiona la PAC?</strong>
+											</div>
+										</div>
+										<div class="col-lg-12">
+											<div class="form-group">
+												&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+												<label>Indicar<input class="form-control" ng-model="PAC"></label>
+												&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+												<label>Persona de contacto (Teléfono)<input class="form-control" ng-model="pc3"></label>
+											</div>
+											
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						</div>
+
+					</form>
+				</div>
+			   
+			</div>
+			<div class="modal-footer">
+				<div class="pull-left"><button type="button" class="btn btn-default" ng-hide="siguiente" ng-click="limpiar()"><i class="fa fa-eraser"></i> Limpiar</button></div>
+				<button type="button" class="btn btn-primary" ng-show="siguiente" ng-click="modificar()"><i class="fa fa-gear"></i> Modificar</button>
+				<button type="button" class="btn btn-success" ng-show="siguiente" ng-click="panel.selectTab(2)">Siguiente <i class="fa fa-angle-double-right"></i></button> 
+				<button type="button" class="btn btn-warning pull-right" ng-hide="siguiente" ng-click="guardar('{{cliente.id}}')"><i class="fa fa-save"></i> Guardar</button>
+				<div class="pull-right text-danger" ng-show="errores">Existen Errores</div>
+			</div>
+			
+		</div>
+		
+	
+	</div>
+	<div ng-controller="CreaContacto" ng-init="inicia()">
+	<div class="panel" ng-show="panel.isSelected(2)" >
+		<div class="panel panel-warning">
+				<div class="panel-heading" role="tab" id="headingOne">
+					<h4 class="panel-title">
+						<a data-toggle="collapse" href="" ng-click="agregaOperador('{{cliente.nifcif}}','{{cliente.Nombre}}','{{cliente.Apellido1}}','{{cliente.Apellido2}}','{{cliente.Genero}}','{{cliente.Telefono1}}','{{cliente.Telefono2}}','{{cliente.Fax}}','{{cliente.Email}}','{{cliente.Provincia.id}}','{{cliente.Municipio.id}}','{{cliente.Domicilio}}','{{cliente.CP}}')">
+							<i class="fa fa-plus-circle"></i> Agregar operador como contacto
+						</a>
+					</h4>
+				</div>
+		</div>
+		<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+			<div class="panel panel-warning">
+				<div class="panel-heading" role="tab" id="headingOne">
+					<h4 id="collapseForm" class="panel-title">
+						
+						<div ng-hide="modificaContacto">
+						<a data-parent="#accordion" href="" data-target="#nuevoContacto" data-toggle="collapse" aria-expanded="false" aria-controls="nuevoContacto">
+							<i class="fa fa-plus-circle"></i> Nuevo contacto
+						</a>
+						</div>
+						<div ng-show="modificaContacto">
+						<a data-parent="#accordion" href="" data-target="#nuevoContacto" data-toggle="collapse" aria-expanded="true" aria-controls="nuevoContacto">
+							<i class="fa fa-plus-circle"></i> Modificar contacto
+						</a>
+						</div>
+					</h4>
+				</div>
+				<div class="panel-collapse collapse" id="nuevoContacto" role="tabpanel" aria-labelledby="headingOne">
+					<div class="panel-body">
+						<div class="row">
+					<form id="formularioContacto"class="css-form" name="formularioContacto" role="form" action="." method="POST">{% csrf_token %}
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label>NIF*</label>
+								<input class="form-control" name="nif" ng-model="contacto.nif" required ng-minlength=9 ng-maxlength=9 nifcif>
+							</div>
+						</div>
+
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Nombre*</label>
+								<input class="form-control" name="nombre" ng-model="contacto.nombre" required ng-minlength=3>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Apellido1*</label>
+								<input class="form-control" name="apellido1" ng-model="contacto.apellido1"ng-minlength=3>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Apellido2*</label>
+								<input class="form-control" name="apellido2"ng-model="contacto.apellido2">
+							</div>
+						</div>
+						<div class="col-lg-12">
+							</br>
+							<div class="form-group">
+								<label>Hombre <input type="radio" name="gen" ng-model="contacto.gen" value="H"></label>
+									&nbsp;&nbsp;&nbsp;
+								<label>Mujer <input type="radio" name="gen "ng-model="contacto.gen" value="M"></label>
+							</div>
+						</div>
+						
+						<div class="col-lg-4" >
+							<div class="form-group">
+								<label>Provincia*</label>
+									<select class="form-control" name="provincia" ng-model="provinciaSeleccionada" required>
+										<option ng-show="modificaContacto2 || !modificaContacto" value="[[provi]]">[[codProv]] - [[provincia]]</option>
+										<option ng-repeat="provincia in provincias" value="[[provincia.id]]">[[provincia.CodProvincia]] - [[provincia.Provincia]]</option>
+									</select>
+							</div>
+						</div>
+						
+										
+						<div class="col-lg-5">
+							<div class="form-group">
+								<label>Municipio*</label>
+								<select class="form-control" name="municipio" ng-model="municipioSeleccionado" required>
+									<option ng-show="modificaContacto2 || !modificaContacto" value="[[muni]]">[[codMuni]] - [[municipio]]</option>
+									<option ng-repeat="municipio in municipios  | filter: {idProvincia: provinciaSeleccionada}" value="[[municipio.id]]">[[municipio.CodMunicipio]] - [[municipio.Municipio]]</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-6">
+							<div class="form-group">
+								<label>Domicilio*</label>
+								<input class="form-control" name="domicilio" ng-model="contacto.domicilio" required ng-minlength=3>
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>CP*</label>
+								<input class="form-control" name="cp" ng-model="contacto.cp" required ng-minlength=5 ng-maxlength=5>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Teléfono1*</label>
+								<input class="form-control" name="telefono1" ng-model="contacto.tel1" required pattern="^[9|8|7|6]\d{8}$">
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Teléfono2</label>
+								<input class="form-control" name="telefono2" ng-model="contacto.tel2" pattern="^[9|8|7|6]\d{8}$">
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Fax</label>
+								<input class="form-control" name="fax" ng-model="contacto.fax"pattern="^[9|8|7|6]\d{8}$">
+							</div>
+						</div>
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>E-mail</label>
+								<input type="email" name="email" class="form-control"placeholder="Ej. persona@empresa.com" ng-model="contacto.email">
+							</div>
+						</div>
+					</form>
+				</div>
+					</div>
+					<div class="modal-footer">
+						<div class="pull-left"><button type="button" class="btn btn-default" ng-click="limpiarContacto()"><i class="fa fa-eraser"></i> Limpiar</button></div>
+						<button type="button" class="btn btn-warning pull-right" ng-click="guardarContacto()" ng-hide="modificaContacto"><i class="fa fa-save"></i> Guardar</button>
+						<button type="button" class="btn btn-info pull-right" ng-click="modificaContact()" ng-show="modificaContacto"><i class="fa fa-save"></i> Modificar</button>
+						<button type="button" class="btn btn-danger pull-right" ng-click="cancelar()" ng-show="modificaContacto"><i class="fa fa-times-circle"></i> Cancelar</button>
+						
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="panel panel-warning">
+			<div class="panel-heading">
+				<strong>Contactos</strong>
+				<div class="pull-right"><input type="text" class="form-control" placeholder="Búsqueda..." ng-model="ngContac"></div>
+			</div>
+			<!-- /.panel-heading -->
+			<div class="panel-body">
+			
+			
+				<div class="table-responsive">
+
+					<table class="table table-striped table-bordered table-hover">
+						
+						<thead>
+							<tr>
+								<th width="30"></th>
+								<th>Nombre y Apellidos</th>
+								<th>NIF</th>
+								<th>Teléfono</th>
+								<th>Localidad</th>
+						
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="contacto in contactos|  filter :ngContac">
+								<td><a href="" ng-click="editaContacto(contacto.id)"><i class="fa fa-edit text-info"></i></td>
+								<td>[[contacto.Nombre]] [[contacto.Apellido1]] [[contacto.Apellido2]]</td>
+								<td>[[contacto.nif]]</td>
+								<td>[[contacto.Telefono1]]</td>
+								<td>[[contacto.mun]] ([[contacto.prov]])</td>
+								<td>
+									<a href="" ng-click="eliminarContacto(contacto.id)"><i class="fa fa-trash-o text-danger"></i></a>
+								</td>
+							</tr>
+	
+						</tbody>
+					</table>
+
+				</div>
+				
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" ng-click="panel.selectTab(3)">Anterior <i class="fa fa-angle-double-left"></i></button>
+				<button type="button" class="btn btn-success" ng-click="panel.selectTab(3)">Siguiente <i class="fa fa-angle-double-right"></i></button> 
+			</div>
+			
+			
+			
+		</div>
+	</div>
+	<div class="panel" ng-show="panel.isSelected(3)" ng-controller="CreaInterlocutor">
+		<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+			<div class="panel panel-warning">
+				<div class="panel-heading" role="tab" id="headingOne">
+					<h4 class="panel-title">
+						<div ng-hide="modificaInterlocutor">
+								<a data-toggle="collapse" href="" data-target="#nuevoInterlocutor" aria-expanded="false" aria-controls="nuevoInterlocutor">
+									<i class="fa fa-plus-circle"></i> Nuevo interlocutor
+								</a>
+							</div>
+							<div ng-show="modificaInterlocutor">
+								<a data-toggle="collapse" href="" data-target="#nuevoInterlocutor" aria-expanded="true" aria-controls="nuevoInterlocutor">
+									<i class="fa fa-plus-circle"></i> Modificar interlocutor
+								</a>
+							</div>
+					</h4>
+				</div>
+				<div class="collapse" id="nuevoInterlocutor">
+					<div class="panel-body">
+						<div class="row">
+					<form id="formularioInterlocutor1"class="css-form" name="formularioInterlocutor1" role="form" action="." method="POST">{% csrf_token %}
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label>NIF*</label>
+								<input class="form-control" name="nif" ng-model="inter.nif" required ng-minlength=9 ng-maxlength=9 nifcif>
+							</div>
+						</div>
+
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Nombre*</label>
+								<input class="form-control" name="nombre" ng-model="inter.nombre" required ng-minlength=3>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Teléfono1*</label>
+								<input class="form-control" name="telefono1" ng-model="inter.tel2" required pattern="^[9|8|7|6]\d{8}$">
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Teléfono2</label>
+								<input class="form-control" name="telefono2" ng-model="inter.tel1" pattern="^[9|8|7|6]\d{8}$">
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>E-mail</label>
+								<input type="email" name="email" class="form-control"placeholder="Ej. persona@empresa.com" ng-model="inter.email">
+							</div>
+						</div>
+						
+						<div class="col-lg-12">
+							<div class="form-group">
+								<h5>¿Está autorizado para atender la visita?
+								<label class="text-success">SI<input id="atvis" type="radio" ng-model="atvis" value="SI"></label>
+												&nbsp;&nbsp;&nbsp;
+								<label class="text-danger">NO<input id="atvis" type="radio" ng-model="atvis" value="NO"></label></h5>
+							</div>
+						</div>
+						<div class="col-lg-12">
+							<div class="form-group">
+								<h5>¿Está autorizado para firmar la visita?
+								<label class="text-success">SI<input id="firvis" type="radio" ng-model="firvis" value="SI"></label>
+												&nbsp;&nbsp;&nbsp;
+								<label class="text-danger">NO<input id="firvis" type="radio" ng-model="firvis" value="NO"></label></h5>
+							</div>
+						</div>
+					</form>
+				</div>
+					</div>
+					<div class="modal-footer">
+						<div class="pull-left"><button type="button" class="btn btn-default" ng-click="limpiarInterloc1()"><i class="fa fa-eraser"></i> Limpiar</button></div>
+						<button type="button" class="btn btn-warning pull-right" ng-click="guardarInterloc1()" ng-hide="modificaInterlocutor"><i class="fa fa-save"></i> Guardar</button>
+						<button type="button" class="btn btn-info pull-right" ng-click="modificaInterlocut2()" ng-show="modificaInterlocutor"><i class="fa fa-save"></i> Modificar</button>
+						<button type="button" class="btn btn-danger pull-right" ng-click="cancelar()" ng-show="modificaInterlocutor"><i class="fa fa-times-circle"></i> Cancelar</button>
+					</div>
+				</div>
+			</div>
+			<div class="panel panel-warning">
+				<div class="panel-heading" role="tab" id="headingOne">
+					<h4 class="panel-title">
+						<a data-toggle="collapse" href="" data-target="#nuevoInterlocutor2" aria-expanded="false" aria-controls="nuevoContacto">
+							<i class="fa fa-plus-circle"></i> Usar contacto existente
+						</a>
+					</h4>
+				</div>
+				<div class="collapse" id="nuevoInterlocutor2">
+					<div class="panel-body">
+						<div class="row">
+					<form id="formularioInterlocutor2"class="css-form" name="formularioIntyerlocutor2" role="form" action="." method="POST">{% csrf_token %}
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Selecciona Contacto</label>
+								<select id="contactoInterlocutor" class="form-control" name="contint" ng-model="contint" required>
+									<option ng-repeat="contacto in contactos" value="[[contacto.id]]">[[contacto.Nombre]] [[contacto.Apellido1]] [[contacto.Apellido2]]</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-12">
+							<div class="form-group">
+								<h5>¿Está autorizado para atender la visita?
+								<label class="text-success">SI<input id="atvis2" type="radio" ng-model="atvis2" value="SI"></label>
+												&nbsp;&nbsp;&nbsp;
+								<label class="text-danger">NO<input id="atvis2" type="radio" ng-model="atvis2" value="NO"></label></h5>
+							</div>
+						</div>
+						<div class="col-lg-12">
+							<div class="form-group">
+								<h5>¿Está autorizado para firmar la visita?
+								<label class="text-success">SI<input id="firvis2" type="radio" ng-model="firvis2" value="SI"></label>
+												&nbsp;&nbsp;&nbsp;
+								<label class="text-danger">NO<input id="firvis2" type="radio" ng-model="firvis2" value="NO"></label></h5>
+							</div>
+						</div>
+					</form>
+				</div>
+					</div>
+					<div class="modal-footer">
+						<div class="pull-left"><button type="button" class="btn btn-default" ng-click="limpiarInterloc2()"><i class="fa fa-eraser"></i> Limpiar</button></div>
+						<button type="button" class="btn btn-warning pull-right" ng-hide ="hayContacto(contactos.length)" disabled><i class="fa fa-save"></i> Guardar</button>
+						<button type="button" class="btn btn-warning pull-right" ng-show ="hayContacto(contactos.length)" ng-click="guardarInterloc2()" ><i class="fa fa-save"></i> Guardar</button>
+					</div>
+				</div>
+			</div>
+			</br>
+			<div class="panel panel-warning">
+			<div class="panel-heading">
+				<strong>Interlocutores</strong>
+				<div class="pull-right"><input type="text" class="form-control" placeholder="Búsqueda..." ng-model="ngInter"></div>
+			</div>
+			<!-- /.panel-heading -->
+			<div class="panel-body">
+			
+			
+				<div class="table-responsive">
+
+					<table class="table table-striped table-bordered table-hover">
+						
+						<thead>
+							<tr>
+								<th width="30"></th>
+								<th>Nombre</th>
+								<th>NIF</th>
+								<th>Teléfono</th>
+								<th>Atiende Visita</th>
+								<th>Firma Visita</th>
+						
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="interlocutor in interlocutores|  filter :ngInter">
+								<td><a href="" ng-click="editaInterlocutor(interlocutor.id)"><i class="fa fa-edit text-info"></i></td>
+								<td>[[interlocutor.Nombre]]</td>
+								<td>[[interlocutor.nif]]</td>
+								<td>[[interlocutor.TelefonoMovil]]</td>
+								<td>[[interlocutor.AtiendeVisita]]</td>
+								<td>[[interlocutor.FirmaVisita]]</td>
+								<td>
+									<a href="" ng-click="eliminarInterlocutor(interlocutor.id)"><i class="fa fa-trash-o text-danger"></i></a>
+								</td>
+							</tr>
+	
+						</tbody>
+					</table>
+				</div>
+				
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" ng-click="panel.selectTab(2)">Anterior <i class="fa fa-angle-double-left"></i></button>
+				<button type="button" class="btn btn-success" ng-click="panel.selectTab(4)">Siguiente <i class="fa fa-angle-double-right"></i></button> 
+			</div>
+			
+			
+			
+		</div>
+		</div>
+	</div>
+	<div class="panel" ng-show="panel.isSelected(4)" ng-controller="CreaParcela" ng-init ="iniciaParcela()">
+		<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+			<div class="panel panel-warning">
+				<div class="panel-heading" role="tab" id="headingOne">
+					<h4 class="panel-title">
+						<a data-toggle="collapse" href="" data-target="#nuevaParcela" aria-expanded="false" aria-controls="nuevaParcela" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							<i class="fa fa-plus-circle"></i> Nueva Parcela
+						</a>
+						<a data-toggle="collapse" href="" data-target="#nuevaParcela" aria-expanded="false" aria-controls="nuevaParcela" ng-show="tipoAgricultura == 'IN'">
+							<i class="fa fa-plus-circle"></i> Nuevo Producto Industrial
+						</a>
+					</h4>
+				</div>
+				<div class="collapse" id="nuevaParcela">
+					<div class="panel-body">
+						<div class="row">
+					<form id="formularioParcela"class="css-form" name="formularioParcela" role="form" action="." method="POST">{% csrf_token %}
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Producción ecológica*</label>
+								<select id="eco" class="form-control" name="eco" ng-model="parcela.eco" required>
+									<option value="SI">SI</option>
+									<option value="NO">NO</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label>¿Está inscrito en el RIA?</label>
+								<select id="RIA" class="form-control" name="RIA" ng-model="RIA" required>
+									<option value="SI">SI</option>
+									<option value="NO">NO</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="RIA == 'SI'">
+							<div class="form-group">
+								<label>Matrícula RIA*(xx/yyyyy)</label>
+								<input id="matRIA" class="form-control" name="matRIA" ng-model="matRIA" ng-change="cambiaRIA()" required ng-maxlength=12 pattern="\d{2}/\d{5}">
+							</div>
+						</div>
+						
+						<div class="col-lg-12">
+							<div class="form-group">
+
+							</div>
+						</div>
+					
+					
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA' || RIA == 'NO'">Provincia*</label>
+								<label ng-show="(tipoAgricultura == 'IN' && RIA == 'SI') || (tipoAgricultura == 'IN' && !RIA)">Provincia</label>
+									<select id="provincia"class="form-control" name="provincia" ng-model="provSelecionada" required>
+										<option ng-repeat="provincia in provincias" value="[[provincia.id]]">[[provincia.CodProvincia]] - [[provincia.Provincia]]</option>
+									</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA' || RIA == 'NO'">Municipio*</label>
+								<label ng-show="(tipoAgricultura == 'IN' && RIA == 'SI') || (tipoAgricultura == 'IN' && !RIA)">Municipio</label>
+								<select class="form-control" name="municipio" ng-model="munSeleccionado" required>
+									<option ng-repeat="municipio in municipios  | filter: {idProvincia: provSelecionada}" value="[[municipio.id]]">[[municipio.CodMunicipio]] - [[municipio.Municipio]]</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-12">
+							<div class="form-group">
+							</div>
+						</div>
+						
+						<div class="col-lg-4" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label ng-show="RIA == 'NO'">Domicilio*</label>
+								<label ng-show="RIA == 'SI' || !RIA">Domicilio</label>
+								<input id="domicilio" class="form-control" name="domicilio" ng-model="domicilio">
+							</div>
+						</div>
+						<div class="col-lg-2" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label ng-show="RIA == 'NO'">CP*</label>
+								<label ng-show="RIA == 'SI' || !RIA">CP</label>
+								<input id="CP" class="form-control" name="CP" ng-model="CP" ng-minlength=5 ng-maxlength=5>
+							</div>
+						</div>
+						
+						<div class="col-lg-2" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label ng-show="RIA == 'NO'">Coord. UTM X*</label>
+								<label ng-show="RIA == 'SI' || !RIA">Coord. UTM X</label>
+								<input id="utmx" class="form-control" name="utmx" ng-model="utmx">
+							</div>
+						</div>
+						
+						<div class="col-lg-2" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label ng-show="RIA == 'NO'">Coord. UTM Y*</label>
+								<label ng-show="RIA == 'SI' || !RIA">Coord. UTM Y</label>
+								<input id="utmy" class="form-control" name="utmy" ng-model="utmy">
+							</div>
+						</div>
+						
+						<div class="col-lg-12" ng-show="RIA == 'SI'">
+							<div class="form-group">
+							</div>
+						</div>
+						
+						<div class="col-lg-2" ng-show="RIA == 'SI'">
+							<div class="form-group">
+								<label>Registro Sanitario*</label>
+								<input id="regSan" class="form-control" name="regSan" ng-model="regSan" required ng-maxlength=13>
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label>Registro Embotelladora</label>
+								<input id="regEmb" class="form-control" name="regEmb" ng-model="regEmb" ng-maxlength=10>
+							</div>
+						</div>
+						
+						<div class="col-lg-2" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Polígono*</label>
+								<input id ="poli" class="form-control" name="poligono" ng-model="parcela.poligono" required ng-minlength=1 ng-maxlength=3>
+							</div>
+						</div>
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Parcela*</label>
+								<input id = "parce" class="form-control" name="parcela" ng-model="parcela.parcela" required ng-minlength=1 ng-maxlength=5>
+							</div>
+						</div>
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Recinto/s*</label>
+								<input id = "recin" class="form-control" name="recinto" ng-model="parcela.recinto" required ng-minlength=1 ng-maxlength=5>
+							</div>
+						</div>
+						
+						<div class="col-lg-4" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Superficie (ha)*</label>
+								<input id="superficie"class="form-control" name="superficie" ng-model="parcela.superficie" required>
+							</div>
+						</div>
+						
+						<div class="col-lg-12">
+							<div class="form-group">
+								
+							</div>
+						</div>
+						
+						<div class="col-lg-4" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Código REGA de la explotación*</label>
+								<input id = "codigoExplotacion" class="form-control" name="codigoExplotacion" ng-model="codigoExplotacion" required ng-minlength=14 ng-maxlength=14 pattern="^ES\d{12}$" placeholder="ES123456789123">
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Grupo de cultivo*</label>
+								<select class="form-control" name="grupoCultivo" ng-model="grupoCultivo" required>
+									<option value="1">Dehesa</option>
+									<option value="2">Pradera</option>
+									<option value="3">Pasto</option>
+									<option value="4">Pastizal</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-12" ng-show="tipoAgricultura == 'GA'">
+
+						</div>
+						<div class="col-lg-4" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Actividad Genérica*</label>
+								<select class="form-control" name="actgen2" ng-model="ActGen2" required>
+								{% for actividad2 in actgen2 %}
+									<option value="{{actividad2}}">{{actividad2}}</option>
+								{% endfor %}
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-4" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Orientación Productiva*</label>
+								<select class="form-control" name="productoGan" ng-model="productoGan" required>
+									<option ng-repeat="orientacion in orientaciones | filter: {Actividad: ActGen2}| orderBy:'Producto'" value="[[orientacion.CodProducto]]">[[orientacion.Producto]]</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-4" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Raza animal</label>
+								<input id = "Raza" class="form-control" name="Raza" ng-model="Raza">
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Número de animales/colmenas</label>
+								<input id="animales" class="form-control" name="animales" ng-model="animales">
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Número en el registro apícola</label>
+								<input id="regApicola" class="form-control" name="regApicola" ng-model="regApicola">
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Número de registro de acuicultura</label>
+								<input id="regAcuicola" class="form-control" name="regAcuicola" ng-model="regAcuicola">
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Tipo de estructura</label>
+								<select class="form-control" name="tipoAcuicola" ng-model="tipoAcuicola" required>
+									<option value="1">Estanque</option>
+									<option value="2">Estero</option>
+									<option value="3">Jaula</option>
+									<option value="4">Otra estructura fija</option>
+									<option value="5">Otra estructura móvil</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Coordenada UTM X</label>
+								<input id="UtmX" class="form-control" name="UtmX" ng-model="UtmX">
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Coordenada UTM Y</label>
+								<input id="UtmY" class="form-control" name="UtmY" ng-model="UtmY">
+							</div>
+						</div>
+						
+						<div class="col-lg-4" ng-show="tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Volumen de producción estimado(Kg)>0*</label>
+								<input id="Produccion" class="form-control" name="Produccion" ng-model="Produccion">
+							</div>
+						</div>
+						
+						<div class="col-lg-4" ng-show="tipoAgricultura == 'AE'">
+							<div class="form-group">
+								<label>Actividad Genérica*</label>
+								<select class="form-control" name="actgen" ng-model="ActGen" required>
+								{% for actividad in actgen %}
+									<option value="{{actividad}}">{{actividad}}</option>
+								{% endfor %}
+								</select>
+							</div>
+						</div>
+
+						<div class="col-lg-4" ng-show="tipoAgricultura == 'AE'">
+							<div class="form-group">
+								<label>Cultivo*</label>
+								<select class="form-control" name="cultivo" ng-model="cultivo" required>
+									<option ng-repeat="cultivo in cultivos | filter: {Actividad: ActGen}| orderBy:'Cultivo'" value="[[cultivo.CodCultivo]]">[[cultivo.Cultivo]]</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-4" ng-show="tipoAgricultura == 'AE'">
+							<div class="form-group">
+								<label>Variedad</label>
+								<select class="form-control" name="variedad" ng-model="vari">
+									<option ng-repeat="var in variedad | filter: {CodCultivo: cultivo}| orderBy:'Variedad'" value="[[var.id]]">[[var.Variedad]]</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>SR*</label>
+								<select class="form-control" name="sr" ng-model="sr" required>
+									<option value="S">Secano</option>
+									<option value="R">Regadío</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label>Tipos de Procesado*</label>
+								<ul class="list-group">
+								  <li class="list-group-item"><input ng-model="Elaboracion" type="checkbox" value="E"> Elaboración</li>
+								  <li class="list-group-item"><input ng-model="Envasado" type="checkbox" value="X"> Envasado</li>
+								  <li class="list-group-item"><input ng-model="Comercializacion" type="checkbox" value="C"> Comercialización</li>
+								  <li class="list-group-item"><input ng-model="Importacion" type="checkbox" value="I"> Importación</li>
+								  <li class="list-group-item"><input ng-model="Exportacion" type="checkbox" value="P"> Exportación</li>
+								</ul>
+							</div>
+						</div>
+						
+						<div class="col-lg-9" ng-show="tipoAgricultura == 'IN'">
+							<div class="col-lg-9 col-lg-4">
+							<div class="form-group">
+								<label>Tipo Comercialización*</label>
+								<select class="form-control" name="tipoCom" ng-model="tipoCom" required>
+									<option value=1>Mayorista</option>
+									<option value=2>Minorista</option>
+								</select>	
+							</div>
+							</div>
+							<div class="col-lg-9 col-lg-4" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label>Actividad Genérica*</label>
+								<select class="form-control" name="actgen" ng-model="ActGen" required>
+								{% for actividad in actgenIn %}
+									<option value="{{actividad}}">{{actividad}}</option>
+								{% endfor %}
+								</select>
+							</div>
+							</div>
+							<div class="col-lg-9 col-lg-4" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label>Producto*</label>
+								<select class="form-control" name="prodtIndustria" ng-model="prodtIndustria" required>
+									<option ng-repeat="producto in productosIndustria | filter: {Producto: ActGen}| orderBy:'Actividad'" value="[[producto.CodActividad]]">[[producto.Actividad]]</option>
+								</select>
+							</div>
+							</div>
+							<div class="col-lg-9 col-lg-12" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label>Descripción del Producto</label>
+								<textarea class="form-control" rows="3" ng-model="descripcion"></textarea>
+							</div>
+							</div>
+							<div class="col-lg-9 col-lg-4" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label>F. inscripción producto AE*</label>
+								<input id="f_ins_ae" type="date" class="form-control" name="f_ins_ae" ng-model="f_ins_ae" required>
+							</div>
+							</div>
+							<div class="col-lg-9 col-lg-4" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label>Capacidad de producción(Kilos)*</label>
+								<input id="c_prod" class="form-control" name="c_prod" ng-model="c_prod" required>
+							</div>
+							</div>
+						</div>
+						<div class="col-lg-12" ng-show="tipoAgricultura == 'IN'">
+						</div>
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'IN'">
+							<div class="form-group">
+								<label>Tamaños envases*</label>
+								<ul class="list-group">
+									<li class="list-group-item">
+										<div class="input-group">
+											<input type="text" class="form-control" placeholder="Indique cantidad" ng-model="cant_tam" pattern="\d+(.\d{1,3})?">
+											  <span class="input-group-btn">
+												<button type="button" class="btn btn-default" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">[[medida]] <span class="caret"></span></button>
+												<ul class="dropdown-menu dropdown-menu-right">
+												  <li><a href="" ng-click="anadeMedida('g','G')">Gramos</a></li>
+												  <li><a href="" ng-click="anadeMedida('l','L')">Litros</a></li>
+												  <li><a href="" ng-click="anadeMedida('kg','K')">Kilogramos</a></li>
+												  <li><a href="" ng-click="anadeMedida('ml','M')">Mililitros</a></li>
+												</ul>
+												<button class="btn btn-default" type="button" ng-click="anadeTamanyo()"><i class="fa fa-plus-circle"></i></button>
+											  </span>
+										</div>
+									</li>
+									<li ng-repeat="tamanyo in tamanyos" class="list-group-item">
+									<a href="" ng-click="eliminaTamanyo(tamanyo.id)"><i class="fa fa-trash-o text-danger"></i></a> [[tamanyo.cantidad]] [[tamanyo.medida]]</li>
+								</ul>
+							</div>
+						</div>
+						<div class="col-lg-9" ng-show="tipoAgricultura == 'IN'">
+							<div class="col-lg-9 col-lg-4">
+								<div class="form-group">
+									<label>Forma de presentación*</label>
+									<select class="form-control" name="for_pres" ng-model="for_pres" required>
+										<option value=1>A granel</option>
+										<option value=2>Envasado cerrado</option>
+										<option value=3>Otros</option>
+									</select>	
+									</br>
+									<label>Valor comercialización*</label>
+									<div class="input-group">
+										  <input type="text" class="form-control" ng-model="v_comer" required pattern="\d+(.\d{1,2})?">
+										  <span class="input-group-addon">€</span>
+									</div>
+
+								</div>
+							</div>
+
+							<div class="col-lg-9 col-lg-6">
+								<div class="form-group">
+									<label>Marcas de Referencia*</label>
+									<ul class="list-group">
+										<li class="list-group-item">
+											<div class="input-group">
+												<input type="text" class="form-control" placeholder="Añadir marca de referencia" ng-model="m_ref">
+												  <span class="input-group-btn">
+													<button class="btn btn-default" type="button" ng-click="anadeMarca()"><i class="fa fa-plus-circle"></i></button>
+												  </span>
+											</div>
+										</li>
+										<li ng-repeat="marca in marcas" class="list-group-item">
+										<a href="" ng-click="eliminaMarca(marca.id)"><i class="fa fa-trash-o text-danger"></i></a>	[[marca.marca]]</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+
+						
+						<div ng-show="parcela.eco == 'SI' ">
+						
+						<div class="col-lg-12">
+							<div class="form-group">
+								<h5>¿Tiene declaración PAC?
+								<label class="text-success">SI<input id="dpac" type="radio" ng-model="parcela.dpac" value="SI"></label>
+												&nbsp;&nbsp;&nbsp;
+								<label class="text-danger">NO<input id="dpac" type="radio" ng-model="parcela.dpac" value="NO"></label></h5>
+							</div>
+						</div>
+						
+						
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'AE'">
+							<div class="form-group">
+								<label>Cosecha anual*</label>
+								<input id="cosecha" class="form-control" name="cosecha" ng-model="parcela.cosecha" required>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>F. inscripción AE*</label>
+								<input id="fae" type="date" class="form-control" name="fae" ng-model="fae" required>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Fecha de inicio de control*</label>
+								<input id="fcontrol" type="date" class="form-control" name="fcontrol" ng-model="fcontrol" required>
+							</div>
+						</div>
+						
+						<div class="col-lg-4" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Calificación*</label>
+								<select class="form-control" name="calificacion" ng-model="parcela.calificacion" required>
+									<option value="1">Primer año en prácticas</option>
+									<option value="2">Período conversión</option>
+									<option value="3">Agricultura Ecológica</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							<div class="form-group">
+								<label>Fecha de calificación*</label>
+								<input id="fcalif" type="date" class="form-control" name="fcalif" ng-model="parcela.fcalif" required>
+							</div>
+						</div>
+
+						</div>
+						
+						
+						
+					</form>
+				</div>
+					</div>
+					<div class="modal-footer">
+						<div class="pull-left"><button type="button" class="btn btn-default" ng-click="limpiarParcela()"><i class="fa fa-eraser"></i> Limpiar</button></div>
+						<button type="button" class="btn btn-warning pull-right" ng-click="guardarParcela2()"><i class="fa fa-save"></i> Guardar</button>
+					</div>
+				</div>
+			</div>
+			
+			</br>
+			<div class="panel panel-success">
+			<div class="panel-heading" role="tab" id="headingOne">
+					<h4 class="panel-title">
+						<a data-toggle="collapse" href="" data-target="#ecologica" aria-expanded="false" aria-controls="ecologica" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							<i class="fa fa-plus-circle"></i> Parcelas Agricultura Ecológica
+						</a>
+						<a data-toggle="collapse" href="" data-target="#ecologica" aria-expanded="false" aria-controls="ecologica" ng-show="tipoAgricultura == 'IN'">
+							<i class="fa fa-plus-circle"></i> Productos Industriales Ecológicos
+							
+						</a>
+					</h4>
+				</div>
+			<div class="collapse" id="ecologica">
+		  
+			<!-- /.panel-heading -->
+			<div class="panel-body">
+
+				<div class="table-responsive">
+					
+					<table class="table table-striped table-bordered table-hover">
+						
+						<thead>
+							<tr ng-show="tipoAgricultura == 'IN'">
+								<th>Municipio</th>
+								<th>Producto</th>
+								<th>Presentación</th>
+								<th>Valor producción</th>
+								<th>Declara PAC</th>
+							</tr>
+							<tr ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+								<th>Provincia</th>
+								<th>Municipio</th>
+								<th>Polígono</th>
+								<th>Parcela</th>
+								<th>Recinto</th>
+								<th>Producto</th>
+								<th>Superficie(Ha)</th>
+								<th>Declara PAC</th>
+						
+							</tr>
+						</thead>
+						<tbody ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							<tr ng-repeat="parcela in parcelas|  filter :{ag_eco: 'SI'}" >
+								<td>[[parcela.prov]]([[parcela.codprov]])</td>
+								<td>[[parcela.mun]]([[parcela.codmun]])</td>
+								<td>[[parcela.poligono]]</td>
+								<td>[[parcela.parcela]]</td>
+								<td>[[parcela.recinto]]</td>
+								<td ng-show= "tipoAgricultura == 'AE'">[[parcela.cultivo]]</td>
+								<td ng-show= "tipoAgricultura == 'GA'">[[parcela.Orientacion]]</td>
+								<td>[[parcela.superficie_hectareas]]</td>
+								<td>[[parcela.declar_pac]]</td>
+								<td>
+									<a href="" ng-click="eliminarParcela(parcela.id)"><i class="fa fa-trash-o text-danger"></i></a>
+								</td>
+							</tr>
+	
+						</tbody>
+						<tbody ng-show="tipoAgricultura == 'IN'">
+							<tr ng-repeat="parcela in parcelas|  filter :{ag_eco: 'SI'}" >
+								<td>[[parcela.mun]] ([[parcela.prov]])</td>
+								<td>[[parcela.actgen]]</td>
+								<td>[[pres(parcela.form_pres)]]</td>
+								<td>[[parcela.valor_produccion]] €</td>
+								<td>[[parcela.declar_pac]]</td>
+								<td>
+									<a href="" ng-click="eliminarParcela(parcela.id)"><i class="fa fa-trash-o text-danger"></i></a>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<div ng-show="siguiente4">
+						No existen parcelas
+					</div>
+				</div>
+				<div class="alert alert-success col-lg-3 pull-right" role="alert" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+				  Superficie TOTAL(Ha): [[superficie1]] ha
+				</div>
+				
+			</div>
+			</div>
+
+		</div>
+		
+		<div class="panel panel-danger">
+			<div class="panel-heading" role="tab" id="headingOne">
+					<h4 class="panel-title">
+						<a data-toggle="collapse" href="" data-target="#noecologica" aria-expanded="false" aria-controls="noecologica" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							<i class="fa fa-plus-circle"></i> Parcelas Agricultura NO Ecológica
+						</a>
+						<a data-toggle="collapse" href="" data-target="#noecologica" aria-expanded="false" aria-controls="noecologica" ng-show="tipoAgricultura == 'IN'">
+							<i class="fa fa-plus-circle"></i> Productos Industriales NO Ecológicos
+						</a>
+					</h4>
+				</div>
+			<div class="collapse" id="noecologica">
+			<!-- /.panel-heading -->
+			<div class="panel-body">
+			
+			
+				<div class="table-responsive">
+				
+
+					<table class="table table-striped table-bordered table-hover">
+						
+					   <thead>
+							<tr ng-show="tipoAgricultura == 'IN'">
+								<th>Municipio</th>
+								<th>Producto</th>
+								<th>Presentación</th>
+								<th>Valor producción</th>
+							</tr>
+							<tr ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+								<th>Provincia</th>
+								<th>Municipio</th>
+								<th>Polígono</th>
+								<th>Parcela</th>
+								<th>Recinto</th>
+								<th>Producto</th>
+								<th>Superficie(Ha)</th>		
+							</tr>
+						</thead>
+						<tbody ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+							
+							<tr ng-repeat="parcela in parcelas|  filter : {ag_eco: 'NO'}">
+								<td>[[parcela.prov]]([[parcela.codprov]])</td>
+								<td>[[parcela.mun]]([[parcela.codmun]])</td>
+								<td>[[parcela.poligono]]</td>
+								<td>[[parcela.parcela]]</td>
+								<td>[[parcela.recinto]]</td>
+								<td ng-show= "tipoAgricultura == 'AE'">[[parcela.cultivo]]</td>
+								<td ng-show= "tipoAgricultura == 'GA'">[[parcela.Orientacion]]</td>
+								<td>[[parcela.superficie_hectareas]]</td>
+								<td>
+									<a href="" ng-click="eliminarParcela(parcela.id)"><i class="fa fa-trash-o text-danger"></i></a>
+								</td>
+							</tr>
+	
+						</tbody>
+						<tbody ng-show="tipoAgricultura == 'IN'">
+							
+							<tr ng-repeat="parcela in parcelas|  filter :{ag_eco: 'NO'}" >
+								<td>[[parcela.mun]] ([[parcela.prov]])</td>
+								<td>[[parcela.actgen]]</td>
+								<td>[[pres(parcela.form_pres)]]</td>
+								<td>[[parcela.valor_produccion]] €</td>
+								<td>
+									<a href="" ng-click="eliminarParcela(parcela.id)"><i class="fa fa-trash-o text-danger"></i></a>
+								</td>
+							</tr>
+						</body>
+					</table>
+					<div ng-show="siguiente5">
+						No existen parcelas
+					</div>
+				</div>
+				<div class="alert alert-danger col-lg-3 pull-right" role="alert" ng-show="tipoAgricultura == 'AE' || tipoAgricultura == 'GA'">
+				  Superficie TOTAL(Ha): [[superficie2]] ha
+				</div>
+				
+			</div>
+			</div>
+
+		</div>
+		
+		</br>
+		<div class="col-lg-12">
+			<div class="form-group">
+				<div class="pull-right">
+				<button type="button" class="btn btn-primary" ng-click="panel.selectTab(3)">Anterior <i class="fa fa-angle-double-left"></i></button>
+				<button type="button" class="btn btn-success" ng-click="finalizar(expediente_id)">Finalizar <i class="fa fa-sign-out"></i></button>
+				</div>
+			</div>
+		</div>
+		
+		
+		</div>
+	</div>
+	</div>
+	</div>
+	</div>
+	</section>
+	
+</div>
+{% endblock %}

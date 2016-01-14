@@ -1,0 +1,83 @@
+{% extends "ecologica/index.html" %}
+{% load i18n admin_static %}
+
+{% block title %}Producción Ecológica|Clientes{% endblock %}
+
+{% load i18n %}
+{% load index %}
+
+{% block extrascripts %}
+<script src="{% static 'js/Modulos/Expedientes.js' %}"></script>
+{% endblock %}
+
+{% block breadcrumbs %}
+			<div class="row panel panel-default">
+			<div class="panel-heading">
+			  <div class="row ">
+			  <div class="container-fluid">
+				<div class="navbar-header">
+					<ul class="breadcrumb">
+					  <li><a id="breadmio" href="{% url 'ecologica:index' %}">Dashboard</a></li>
+					  <li class="active"><strong>Clientes</strong></li>
+					</ul>
+				</div>
+				</div>
+			</div>
+			</div>
+			</div>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="row" ng-app="Expedientes">
+	
+	<div class="col-lg-12" ng-controller="ListaExpedientes">
+	</br>
+		<div class="panel panel-success">
+			<div class="panel-heading">
+				<strong>Clientes</strong>
+				<div class="pull-right"><input type="text" class="form-control" placeholder="Búsqueda..." ng-model="filtro" ng-change="filtraTabla()"></div>
+			</div>
+			<!-- /.panel-heading -->
+			<div class="panel-body">
+				<div class="table-responsive">
+					
+					<table class="table table-striped table-bordered table-hover expedientesTabla">
+						
+						<thead>
+							<tr>
+								<th class="text-center" width="40">#</th>
+								<th>Nombre y Apellidos</th>
+								<th>NIF/CIF</th>
+								<th>Teléfono</th>
+								<th>Localidad</th>
+						
+							</tr>
+						</thead>
+						<tbody>
+
+							{% for cliente in lista_clientes %}
+							<tr>
+								<td class="text-center">{{lista_clientes|index:cliente.id}}</td>
+								<td><a href="{% url 'ecologica:cliente' cliente.id %}">{{cliente.Nombre}} {{cliente.Apellido1}} {{cliente.Apellido2}}</a></td>
+								<td>{{cliente.nifcif}}</td>
+								<td>{{cliente.Telefono1}}</td>
+								<td>{{cliente.Municipio}} ({{cliente.Provincia}})</td>
+								
+							</tr>
+							{% endfor %}
+								
+						</tbody>
+					</table>
+				</div>
+
+			</div>
+			
+		</div>
+		
+	</div>
+	
+
+</div>
+{% endblock %}

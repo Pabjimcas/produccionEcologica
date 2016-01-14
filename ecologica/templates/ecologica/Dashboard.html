@@ -1,0 +1,359 @@
+{% extends "ecologica/index.html" %}
+{% load i18n admin_static %}
+
+{% block title %}Producción Ecológica|Dashboard{% endblock %}
+
+{% block extrascripts %}
+<script src="{% static 'js/Modulos/Dashboard.js' %}"></script>
+{% endblock %}
+
+{% load i18n %}
+{% load index %}
+{% block breadcrumbs %}
+			<div class="row panel panel-default">
+			<div class="panel-heading">
+			  <div class="row ">
+			  <div class="container-fluid">
+				<div class="navbar-header">
+					<ul class="breadcrumb">				   
+					  {% if tipoUs == 'Admin' %}<li class="active"><strong>Dashboard</strong></li>{% endif %}
+					  {% if tipoUs == 'A' %}<li class="active"><strong>Expedientes</strong></li>{% endif %}
+					</ul>
+				</div>
+				</div>
+			</div>
+			</div>
+			</div>
+
+{% endblock %}	
+			
+			{% block content %}
+				<div ng-app="Dashboard">
+				{% if tipoUs == 'Admin' %}<h1 class="page-header">Dashboard</h1>
+				</br>
+				{% endif %}
+				{% if tipoUs == 'A' %}<h1 class="page-header text-center">Listado de Expedientes</h1>{% endif %}
+				
+				
+				{% if tipoUs != 'A' %}
+				<div class="row">
+					{% if generaSipea == 'SI' %}
+					<div class="col-lg-4 col-md-6" ng-controller="ArchivoSipea" ng-init="inicia()">
+						<div class="panel panel-success">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i id="iconoAE" class="fa fa-file-o fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+									</br>
+									<h3><strong>Archivo SIPEA</strong></h3>
+                                </div>
+                            </div>
+                        </div>
+                            <div class="panel-body">
+								<div class="list-group">
+								  <a href="#" ng-click="generaTxt('AE')" id="aeco" class="list-group-item list-group-item-success disabled">
+									<h4 class="list-group-item-heading">
+										<span class="pull-left"><i class="fa fa-leaf"></i> <strong>Agricultura Ecológica</strong> 
+										<h6>{{numparcelas}} registros</h6>
+										{% if nrecolector > 0 %}
+										{% if nrecolector > 1%}
+										<h6>¡{{nrecolector}} nuevos!</h6>
+										{% else %}
+										<h6>¡{{nrecolector}} nuevo!</h6>
+										{% endif %}
+										{% endif %}
+										</span> 
+										<span class="pull-right"><i class="fa fa-download"></i></span>
+										<div class="clearfix"></div>
+									</h4>
+									
+								  </a>
+								  <a href="#" ng-click="generaTxt('GA')" id="ganad" class="list-group-item list-group-item-warning disabled">
+									<h4 class="list-group-item-heading">
+										<span class="pull-left"><i class="fa fa-home"></i> <strong>Ganadería</strong>
+										<h6>{{numganaderas}} registros</h6>
+										{% if nrecolector2 > 0 %}
+										{% if nrecolector2 > 1%}
+										<h6>¡{{nrecolector2}} nuevos!</h6>
+										{% else %}
+										<h6>¡{{nrecolector2}} nuevo!</h6>
+										{% endif %}
+										{% endif %}
+										</span> 
+										<span class="pull-right"><i class="fa fa-download"></i></span>	
+										<div class="clearfix"></div>
+									</h4>
+								  </a>
+								  <a href="#" ng-click="generaTxt('IN')" id="industria" class="list-group-item list-group-item-info disabled">
+									<h4 class="list-group-item-heading">
+										<span class="pull-left"><i class="fa fa-cogs"></i> <strong>Industria</strong>
+											<h6>{{numindustrias}} registros</h6>
+											{% if nrecolector3 > 0 %}
+											{% if nrecolector3 > 1%}
+											<h6>¡{{nrecolector3}} nuevos!</h6>
+											{% else %}
+											<h6>¡{{nrecolector3}} nuevo!</h6>
+											{% endif %}
+											{% endif %}
+										</span> 
+										<span class="pull-right"><i class="fa fa-download"></i></span>	
+										<div class="clearfix"></div>
+									</h4>
+								  </a>
+								</div>
+                                
+                            </div>
+						</div>
+					</div>
+					{% endif %}
+					<div class="col-lg-4 col-md-6" ng-controller="ArchivoSice">
+						<div class="panel panel-warning">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i id="iconoSICE" class="fa fa-file-o fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+									</br>
+									<h3><strong>Archivo SICE</strong></h3>
+                                </div>
+                            </div>
+                        </div>
+						<div class="panel-body">
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label>Fecha desde</label>
+									<input id="ffact" type="date" class="form-control" name="ffact" ng-model="ffact" ng-change="nuevaFecha()">
+								</div>
+							</div>
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label>Fecha hasta</label>
+									<input id="ffact2" type="date" class="form-control" name="ffact2" ng-model="ffact2" ng-change="nuevaFecha()">
+								</div>
+							</div>
+							<div class="col-lg-12">
+								<div class="list-group">
+									<li class="list-group-item" >
+										<h4 class="list-group-item-heading">
+										<span class="pull-left text-info" ><i class="fa fa-calendar"></i> <strong>Planificaciones</strong>
+											
+										</span> 
+											<span class="pull-right" title="Desactivar planificaciones"><a href="" ng-click="desactivar('PLA')"><i class="fa fa-eraser"></i></a></span>
+
+											<span class="pull-right" title="Genera Fichero Planificaciones"><a href="" ng-click="generaSice('PLA')" class="text-info"><i class="fa fa-download"></i></a>
+												&nbsp;&nbsp;											</span>	
+											<div class="clearfix"></div>
+										</h4>
+									</li>
+									<li class="list-group-item">
+										<h4 class="list-group-item-heading">
+										<span class="pull-left text-warning"><i class="fa fa-edit"></i> <strong>Actuaciones</strong></span>
+												
+										<span class="pull-right" title="Desactivar actuaciones"><a href="" ng-click="desactivar('ACT')"><i class="fa fa-eraser"></i></a></span>
+
+											<span class="pull-right" title="Genera Fichero Actuaciones"><a href=""  ng-click="generaSice('ACT')" class="text-warning"><i class="fa fa-download"></i></a>
+												&nbsp;&nbsp;											</span>	
+											<div class="clearfix"></div>
+										</h4>
+									</li>
+									<li class="list-group-item">
+										<h4 class="list-group-item-heading">
+										<span class="pull-left text-danger"><i class="fa fa-thumbs-o-down"></i> <strong>Incumplimientos</strong>
+												
+										</span> 
+											<span class="pull-right" title="Desactivar incumplimientos"><a href="" ng-click="desactivar('INC')"><i class="fa fa-eraser"></i></a></span>
+
+											<span class="pull-right" title="Genera Fichero Incumplimientos"><a href=""  ng-click="generaSice('INC')" class="text-danger"><i class="fa fa-download"></i></a>
+												&nbsp;&nbsp;											</span>
+											<div class="clearfix"></div>
+										</h4>
+									</li>
+
+								</div>
+							</div>
+                                <div class="col-lg-12">
+                            	<div id="barraProgreso" class="progress">
+											
+										  <div id="textProgreso"class="progress-bar progress-bar-default progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
+											
+										  </div>
+									</div>
+                            </div>
+                            </div>
+
+						</div>
+					</div>
+					<div class="col-lg-4 col-md-6">
+						<div class="panel panel-danger">
+							<div class="panel-heading">
+								<div class="row">
+									<div class="col-xs-3">
+										<i class="fa fa-bell-o fa-5x"></i>
+									</div>
+									<div class="col-xs-9 text-right">
+										</br>
+										<h3><strong>ALERTAS</strong></h3>
+									</div>
+								</div>
+							</div>
+                            <div class="panel-body">
+						<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+						{% if caducaExpedientesYa%}
+						<div class="panel panel-danger">
+							<div class="panel-heading" role="tab" id="headingThree">
+								<h4 class="panel-title">
+									<a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+									  <i class="fa fa-exclamation-circle"></i><strong> {{numCaducasYa}} {% if numCaducasYa == 1 %} expediente de certificación caduca{% else %} expedientes de certificación caducan {% endif %} en menos de 15 días</strong>
+									</a>
+								</h4>
+							</div>
+							<div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+								<div class="panel-body">
+									<div class="table-responsive">
+
+										<table id="expedientesTabla" class="table table-striped table-bordered table-hover">
+											
+											<thead>
+												<tr>
+													<th>Nombre y Apellidos</th>
+													<th>Código Expediente</th>
+													<th>Fin de vigencia</th>
+												</tr>
+											</thead>
+											<tbody>
+												{% for expediente in caducaExpedientesYa %}
+												<tr>
+													<td><a href="{% url 'ecologica:cliente' expediente.id_cliente.id %}">{{expediente.id_cliente.Nombre}} {{expediente.id_cliente.Apellido1}} {{expediente.id_cliente.Apellido2}}</a></td>
+													<td><a href="{% url 'ecologica:expediente' expediente.id %}">{{expediente.CodOperador}}</a></td>
+													<td>{{expediente.F_finalvigencia}}</td>
+												</tr>
+												{% endfor %}
+											</tbody>
+										</table>
+										
+
+									</div>
+								</div>
+							</div>
+						</div>
+						{% endif %}
+						{% if caducaExpedientes %}
+						<div class="panel panel-warning">
+							<div class="panel-heading" role="tab" id="headingTwo">
+								<h4 class="panel-title">
+									<a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+										<i class="fa fa-exclamation-circle"></i><strong> {{numCaducas}} {% if numCaducas == 1 %} expediente de certificación caduca{% else %} expedientes de certificación caducan {% endif %} en 3 meses</strong>
+									</a>
+								</h4>
+							</div>
+							<div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+								<div class="panel-body">
+									<div class="table-responsive">
+
+										<table id="expedientesTabla" class="table table-striped table-bordered table-hover">
+											
+											<thead>
+												<tr>
+													<th>Nombre y Apellidos</th>
+													<th>Código Expediente</th>
+													<th>Fin de Vigencia</th>
+												</tr>
+											</thead>
+											<tbody>
+												{% for expediente in caducaExpedientes %}
+												<tr>
+													<td><a href="{% url 'ecologica:cliente' expediente.id_cliente.id %}">{{expediente.id_cliente.Nombre}} {{expediente.id_cliente.Apellido1}} {{expediente.id_cliente.Apellido2}}</a></td>
+													<td><a href="{% url 'ecologica:expediente' expediente.id %}">{{expediente.CodOperador}}</a></td>
+													<td>{{expediente.F_finalvigencia}}</td>
+												</tr>
+												{% endfor %}
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+						{% endif %}
+						
+						{% if solicitaPAC %}
+						<div class="panel panel-info">
+							<div class="panel-heading" role="tab" id="headingFour">
+								<h4 class="panel-title">
+									<a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+									  <i class="fa fa-info-circle"></i><strong> {{numPAC}} {% if numPAC == 1 %} expediente pendiente{% else %} expedientes pendientes{% endif %} de recibir el PAC</strong>
+									</a>
+								</h4>
+							</div>
+							<div id="collapseFour" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFour">
+								<div class="panel-body">
+									<div class="table-responsive">
+
+										<table id="expedientesTabla" class="table table-striped table-bordered table-hover">
+											
+											<thead>
+												<tr>
+													<th>Nombre y Apellidos</th>
+													<th>Código Expediente</th>
+													<th>Fecha Auditoría</th>
+												</tr>
+											</thead>
+											<tbody>
+												{% for auditoria in solicitaPAC %}
+												<tr>
+													<td><a href="{% url 'ecologica:cliente' auditoria.visita.expediente.id_cliente.id %}">{{auditoria.visita.expediente.id_cliente.Nombre}} {{auditoria.visita.expediente.id_cliente.Apellido1}} {{auditoria.visita.expediente.id_cliente.Apellido2}}</a></td>
+													<td><a href="{% url 'ecologica:expediente' auditoria.visita.expediente.id %}">{{auditoria.visita.expediente.CodOperador}}</a></td>
+													<td>{{auditoria.f_Auditoria}}</td>
+												</tr>
+												{% endfor %}
+											</tbody>
+										</table>
+										
+
+									</div>
+								</div>
+							</div>
+						</div>
+						{% endif %}
+						
+						
+						</div>
+						</div>
+					</div>
+				</div>
+				{% else %}
+				<div class="table-responsive">
+
+					<table id="expedientesTabla" class="table table-striped table-bordered table-hover">
+						
+						<thead>
+							<tr>
+								<th class="text-center" width="40">#</th>
+								<th>Nombre y Apellidos</th>
+								<th>Código Expediente</th>
+								<th>Teléfono</th>
+								<th>Localidad</th>	
+							</tr>
+						</thead>
+						<tbody>
+							{% for visita in lista_visitasA %}
+							<tr>
+								<td class="text-center">{{lista_visitasA|index:visita.id}}</td>
+								<td><a href="{% url 'ecologica:expediente' visita.expediente.id %}">{{visita.expediente.CodOperador}}</a></td>
+								<td>{{visita.expediente.id_cliente.Nombre}} {{visita.expediente.id_cliente.Apellido1}} {{visita.expediente.id_cliente.Apellido2}}</td>
+								<td>{{visita.expediente.id_cliente.Telefono1}}</td>
+								<td>{{visita.expediente.id_cliente.Municipio}} ({{visita.expediente.id_cliente.Provincia}})</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% endif %}
+				
+			
+				</div>
+				
+                                
+			{% endblock %}

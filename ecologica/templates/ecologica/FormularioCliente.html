@@ -1,0 +1,279 @@
+{% extends "ecologica/index.html" %}
+{% load i18n admin_static %}
+
+{% block title %}Producción Ecológica|Nuevo cliente{% endblock %}
+
+{% block extrastyle %}
+
+<style type="text/css">
+	  .css-form input.ng-invalid.ng-touched {
+		background-color: #FA787E;
+	  }
+
+	  .css-form input.ng-valid.ng-touched {
+		background-color: #78FA89;
+	  }
+	  .css-form select.ng-invalid.ng-touched {
+		background-color: #FA787E;
+	  }
+
+	  .css-form select.ng-valid.ng-touched {
+		background-color: #78FA89;
+	  }
+</style>
+
+{% endblock %}
+
+{% load i18n %}
+{% block extrascripts %}
+<script src="{% static 'js/Modulos/Cliente.js' %}"></script>
+{% endblock %}
+
+{% block breadcrumbs %}
+			<div class="row panel panel-default">
+			<div class="panel-heading">
+			  <div class="row ">
+			  <div class="container-fluid">
+				<div class="navbar-header">
+					<ul class="breadcrumb">
+					  <li><a id="breadmio" href="{% url 'ecologica:index' %}">Dashboard</a></li>  
+					  <li class="active"><strong>Nuevo Cliente</strong></li>
+					</ul>
+				</div>
+				</div>
+			</div>
+			</div>
+			</div>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="row" ng-app="ClienteApp">
+	<div class="col-lg-12">
+		<div class="panel panel-info" ng-controller="CreaCliente" ng-init="inicia()">
+			<div class="panel-heading">
+				<strong>Nuevo cliente</strong>
+			</div>
+			<!-- /.panel-heading -->
+			<div class="panel-body">
+				<div class="row">
+					<form id="formularioCliente"class="css-form" name="ClienteForm" role="form" action="." method="POST">{% csrf_token %}
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label>NIF/CIF*</label>
+								<input class="form-control" ng-class="[has-error]" name="nif" ng-model="cliente.nifcif" required ng-minlength=9 ng-maxlength=9 nifcif>
+								<div class="error-container" ng-show="ClienteForm.nif.$dirty && ClienteForm.nif.$invalid">
+									<small class="error text-danger" ng-show="ClienteForm.nif.$error.required">El nif/cif es requerido</small>
+									<small class="error text-danger" ng-show="ClienteForm.nif.$error.nifcif">El nif/cif no es correcto</small>
+								</div>
+							</div>
+						</div>
+
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Nombre/Razón Social*</label>
+								<input class="form-control" name="nombre" ng-model="cliente.nombre" required ng-minlength=3>
+								<div class="error-container" ng-show="ClienteForm.nombre.$dirty && ClienteForm.nombre.$invalid">
+									<small class="error text-danger" ng-show="ClienteForm.nombre.$error.required">El nombre/Razón social es requerido</small>
+									<small class="error text-danger" ng-show="ClienteForm.nombre.$error.minlength">El nombre/Razon social debe tener mínimo 3 caracteres</small>
+								</div>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Apellido1</label>
+								<input class="form-control" name="apellido1" ng-model="cliente.apellido1"ng-minlength=3>
+								<div class="error-container" ng-show="ClienteForm.apellido1.$dirty && ClienteForm.apellido1.$invalid">
+									<small class="error text-danger" ng-show="ClienteForm.apellido1.$error.minlength">El apellido debe tener mínimo 3 caracteres</small>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Apellido2</label>
+								<input class="form-control" name="apellido2"ng-model="cliente.apellido2">
+								<div class="error-container" ng-show="ClienteForm.apellido2.$dirty && ClienteForm.apellido2.$invalid">
+									<small class="error text-danger" ng-show="ClienteForm.apellido2.$error.minlength">El apellido debe tener mínimo 3 caracteres</small>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-12">
+							</br>
+							<div class="form-group">
+								<label>Hombre <input type="radio" name="gen" ng-model="cliente.gen" value="H"></label>
+									&nbsp;&nbsp;&nbsp;
+								<label>Mujer <input type="radio" name="gen "ng-model="cliente.gen" value="M"></label>
+									&nbsp;&nbsp;&nbsp;
+								<label>No procede<input type="radio" name="gen" ng-model="cliente.gen" value="X"></label>
+								<div class="error-container" ng-show="ClienteForm.gen.$dirty && ClienteForm.gen.$invalid">
+									<small class="error text-danger" ng-show="ClienteForm.gen.$error.minlength">Debe seleccionar una opción</small>
+								</div>
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Provincia*</label>
+									<select id ="provinciaSeleccionada"class="form-control" name="provincia" ng-model="provinciaSeleccionada" required>
+										<option  selected="true" style="display:none;" value="">Selecciona Provincia</option>
+										{% for provincia in provincias %}
+											<option value="{{provincia.id}}">{{provincia.CodProvincia}} - {{provincia.Provincia}}</option>
+										{% endfor %}
+									</select>
+							</div>
+						</div>
+						<div class="col-lg-5">
+							<div class="form-group">
+								<label>Municipio*</label>
+								<select id="municipioSeleccionado" class="form-control" name="municipio" ng-model="municipioSeleccionado" required>
+									<option  selected="true" style="display:none;" value="">Selecciona Municipio</option>
+									<option ng-repeat="municipio in municipios  | filter: {idProvincia: provinciaSeleccionada}" value="[[municipio.id]]">[[municipio.CodMunicipio]] - [[municipio.Municipio]]</option>
+								</select>
+							</div>
+						</div>
+										
+						
+						<div class="col-lg-6">
+							<div class="form-group">
+								<label>Domicilio*</label>
+								<input class="form-control" name="domicilio" ng-model="cliente.domicilio" required ng-minlength=3>
+								<div class="error-container" ng-show="ClienteForm.domicilio.$dirty && ClienteForm.domicilio.$invalid">
+									<small class="error text-danger" ng-show="ClienteForm.domicilio.$error.required">El domicilio es requerido</small>
+									<small class="error text-danger" ng-show="ClienteForm.domicilio.$error.minlength">El domicilio debe tener mínimo 3 caracteres</small>
+								</div>
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>CP*</label>
+								<input class="form-control" name="cp" ng-model="cliente.cp" required ng-minlength=5 ng-maxlength=5>
+								<div class="error-container" ng-show="ClienteForm.cp.$dirty && ClienteForm.cp.$invalid">
+									<small class="error text-danger" ng-show="ClienteForm.cp.$error.required">El CP es requerido</small>
+									<small class="error text-danger" ng-show="ClienteForm.cp.$error.minlength">El CP debe ser de 5 caracteres</small>
+									<small class="error text-danger" ng-show="ClienteForm.cp.$error.maxlength">El CP debe ser de 5 caracteres</small>
+								</div>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Teléfono1*</label>
+								<input class="form-control" name="telefono1" ng-model="cliente.tel1" required pattern="^[9|8|7|6]\d{8}$">
+								<div class="error-container" ng-show="ClienteForm.telefono1.$dirty && ClienteForm.telefono1.$invalid">
+									<small class="error text-danger" ng-show="ClienteForm.telefono1.$error.required">El teléfono es requerido</small>
+									<small class="error text-danger" ng-show="ClienteForm.telefono1.$error.pattern">El teléfono no es correcto</small>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Teléfono2</label>
+								<input class="form-control" name="telefono2" ng-model="cliente.tel2" pattern="^[9|8|7|6]\d{8}$">
+								<small class="error text-danger" ng-show="ClienteForm.telefono2.$error.pattern">El teléfono no es correcto</small>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Fax</label>
+								<input class="form-control" name="fax" ng-model="cliente.fax"pattern="^[9|8|7|6]\d{8}$">
+								<small class="error text-danger" ng-show="ClienteForm.fax.$error.pattern">El Fax no es correcto</small>
+							</div>
+						</div>
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>E-mail</label>
+								<input type="email" name="email" class="form-control"placeholder="Ej. persona@empresa.com" ng-model="cliente.email">
+								<small class="error text-danger" ng-show="ClienteForm.email.$error.email">El email no es correcto</small>
+							</div>
+						</div>
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Web</label>
+								<input type="url" name="url"class="form-control"placeholder="Ej. http://www.miweb.com" ng-model="cliente.web">
+								<small class="error text-danger" ng-show="ClienteForm.url.$error.url">La url no es correcta</small>
+							</div>
+						</div>
+						<div class="col-lg-12">
+							<div class="panel panel-info">
+								<div class="panel-heading">
+									<h4 class="text-center"><strong>FORMA DE PAGO</strong></h4>
+								</div>
+								<div class="panel-body">
+									<div class="col-lg-3">	
+										<div class="form-group">
+											<input type="radio" name="pago" ng-model="pago" value="D"> Pago domiciliado</br>
+											<input type="radio" name="pago"ng-model="pago" value="T"> Pago por transferencia
+										</div>
+									</div>
+									<div class="col-lg-4">
+										<div class="form-group">
+											<label>Tipo de pago</label>
+											<select class="form-control" name="formPago" ng-model="formPago">
+												<option value="">-</option>
+												<option value="R">Recurrente</option>
+												<option value="U">Único</option>
+											</select>
+										</div>
+									</div>
+									<div class="col-lg-4">
+										<div class="form-group">
+											<label>Fecha orden SEPA</label>
+											<input id="F_sepa" type="date" class="form-control" name="F_sepa" ng-model="F_sepa">
+										</div>
+									</div>
+									<div class="col-lg-12">
+											<div class="form-inline">
+													<label>CUENTA BANCARIA</label>
+													<div class="form-group">
+													<div class="input-group">
+														<div class="col-lg-1">
+															<select class="form-control" name="tipoCuenta" ng-model="tipoCuenta" required>
+																<option value="">-</option>
+																<option value="CCC">CCC</option>
+																<option value="IBAN">IBAN</option>
+															</select>
+														</div>
+														<div class="col-lg-1">
+															<input class="form-control" name="fax" ng-model="esiban" ng-minlength=4 ng-maxlength=4 pattern="^ES\d{2}$" ng-show="tipoCuenta == 'IBAN'">
+														</div>
+														<div class="col-lg-1">
+															<input class="form-control" name="fax" ng-model="Cuent1" ng-minlength=4 ng-maxlength=4>
+														</div>
+														<div class="col-lg-1">
+															<input class="form-control"name="fax" ng-model="Cuent2" ng-minlength=4 ng-maxlength=4>
+														</div>
+														<div class="col-lg-1">
+															<input class="form-control"name="fax" ng-model="Cuent3" minlength=2 maxlength=2>
+														</div>
+														<div class="col-lg-2">
+															<input class="form-control" name="fax" ng-model="Cuent4" ng-minlength=10 ng-maxlength=10>
+														</div>
+													</div>
+												</div>
+											</div>
+									</div>
+									<div class="col-lg-12">
+										<label>Observaciones</label>
+										<textarea class="form-control" rows="3" ng-model="observaciones"></textarea>
+									</div>
+								</div>
+							</div>					
+						</div>
+					</form>
+				</div>
+			   
+			</div>
+			<div class="modal-footer">
+				<div class="pull-left"><button type="button" class="btn btn-default" ng-click="limpiar()">Limpiar</button></div>
+				<button type="button" class="btn btn-info" ng-click="guardar()">Guardar</button>
+			</div>
+			
+		</div>
+		
+	</div>
+</div>
+{% endblock %}

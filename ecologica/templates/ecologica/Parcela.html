@@ -1,0 +1,1135 @@
+{% extends "ecologica/index.html" %}
+{% load i18n admin_static %}
+
+{% block title %}Producción Ecológica|Parcela|{{parcela.id}}{% endblock %}
+
+{% block extrascripts %}
+<script src="{% static 'js/Modulos/Parcela.js' %}"></script>
+{% endblock %}
+
+{% block extrastyle %}
+
+<style type="text/css">
+	  .css-form input.ng-invalid.ng-touched {
+		background-color: #FA787E;
+	  }
+
+	  .css-form input.ng-valid.ng-touched {
+		background-color: #78FA89;
+	  }
+	  .css-form select.ng-invalid.ng-touched {
+		background-color: #FA787E;
+	  }
+
+	  .css-form select.ng-valid.ng-touched {
+		background-color: #78FA89;
+	  }
+</style>
+
+{% endblock %}
+
+{% load i18n %}
+
+{% block breadcrumbs %}
+			<div class="row panel panel-default">
+			<div class="panel-heading">
+			  <div class="row ">
+			  <div class="container-fluid">
+				<div class="navbar-header">
+					<ul class="breadcrumb">
+					  <li><a id="breadmio" href="{% url 'ecologica:index' %}">Dashboard</a></li>
+					  {% if tipoUs != 'A' %}
+					   <li><a id="breadmio" href="{% url 'ecologica:clientes' %}">Clientes</a></li>
+					   {% endif %}
+					   {% if tipo == 'AE' %}
+					   {% if tipoUs != 'A' %}
+						<li><a id="breadmio" href="{% url 'ecologica:cliente' parcela.expediente.id_cliente.id %}">{{parcela.expediente.id_cliente.nifcif}}</a></li>	
+						{% endif %}
+						<li><a id="breadmio" href="{% url 'ecologica:expediente' parcela.expediente.id %}">{{parcela.expediente.CodOperador}}</a></li>	
+						{% elif parcela.expedienteGanado %}
+						{% if tipoUs != 'A' %}
+						<li><a id="breadmio" href="{% url 'ecologica:cliente' parcela.expedienteGanado.id_cliente.id %}">{{parcela.expedienteGanado.id_cliente.nifcif}}</a></li>	
+						{% endif %}
+						<li><a id="breadmio" href="{% url 'ecologica:expediente' parcela.expedienteGanado.id %}">{{parcela.expedienteGanado.CodOperador}}</a></li>
+						{% elif producto %}
+						{% if tipoUs != 'A' %}
+						<li><a id="breadmio" href="{% url 'ecologica:cliente' parcela.expediente.id_cliente.id %}">{{parcela.expediente.id_cliente.nifcif}}</a></li>	
+						{% endif %}
+						<li><a id="breadmio" href="{% url 'ecologica:expediente' parcela.expediente.id %}">{{parcela.expediente.CodOperador}}</a></li>
+						{% endif %}
+						  {% if tipo == 'AE' or parcela.expedienteGanado %}
+						  <li class="active"><strong>{{parcela.provincia.CodProvincia}}-{{parcela.municipio.CodMunicipio}}-{{parcela.poligono}}-{{parcela.parcela}}-{{parcela.recinto}}</strong></li>
+						{% else %}
+						 <li class="active"><strong>Producto{{parcela.id}}</strong></li>
+						{% endif %}
+					</ul>
+				</div>
+				</div>
+			</div>
+			</div>
+			</div>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="row" ng-app="Parcela">
+	<section ng-controller="PanelController as panel">
+	<div class="panel panel-info">
+		<div class="panel-heading">
+			<ul class="nav nav-pills ">
+				{% if not producto %}
+				<li role="presentation" ng-class="{ active:panel.isSelected(1)}"><a href ng-click="panel.selectTab(1)">Parcela</a></li>
+				{% else %}
+				<li role="presentation" ng-class="{ active:panel.isSelected(1)}"><a href ng-click="panel.selectTab(1)">Producto Industrial</a></li>
+				{% endif %}
+			</ul>
+		</div>
+		<div class="panel-body">
+			<div class="panel" ng-show="panel.isSelected(1)" ng-controller="Parcela" ng-init="iniciaParcela('{{parcela.id}}','{{tipo}}')">
+				<div ng-show="nomodifica">
+				<div class="panel panel-info">
+				<div class="panel-heading">
+					{% if not producto %}
+					Parcela: {{parcela.provincia.CodProvincia}}-{{parcela.municipio.CodMunicipio}}-{{parcela.poligono}}-{{parcela.parcela}}-{{parcela.recinto}}
+					{% else %}
+					Producto{{parcela.id}}
+					{% endif %}
+				</div>
+				<div class="panel-body">
+					{% if parcela.ag_eco == 'SI' %}
+					{% if estado %}
+					<div class="col-lg-2">
+						<div class="form-group">
+							<div><label>Estado:</label><span class="label label-success">{{parcela.Estado}}</span></div>
+						</div>
+					</div>
+					{% else %}
+					<div class="col-lg-2">
+						<div class="form-group">
+							<div><label>Estado:</label> <span class="label label-danger">{{parcela.Estado}}</span></div>
+						</div>
+					</div>
+					<div class="col-lg-3">
+						<div class="form-group">
+							<div class="text-danger"><label>Fecha de baja:</label> {% if tipo != 'IN' %}{{parcela.F_baja_rec|date:"SHORT_DATE_FORMAT"}}
+																				   {% else %}{{parcela.F_baja|date:"SHORT_DATE_FORMAT"}}
+																				   {% endif %}</div>
+						</div>
+					</div>
+					{% endif %}
+					
+					
+					{% if parcela.Calificacion == '1' %}
+					<div class="col-lg-3">
+						<div class="form-group">
+							<div><label>Calificación:</label> <span class="label label-info">Primer año en prácticas</span></div>
+						</div>
+					</div>
+					{% elif parcela.Calificacion == '2' %}
+					<div class="col-lg-3">
+						<div class="form-group">
+							<div><label>Calificación:</label> <span class="label label-warning">Periodo conversión</span></div>
+						</div>
+					</div>
+					{% elif parcela.Calificacion == '3' %}
+					<div class="col-lg-3">
+						<div class="form-group">
+							<div><label>Calificación:</label> <span class="label label-success">Agricultura Ecológica</span></div>
+						</div>
+					</div>
+					{% endif %}
+					{% if not producto %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<p class="text-info"><label>&nbsp;&nbsp;&nbsp;Fecha de calificación:</label> {{parcela.F_calificacion|date:"SHORT_DATE_FORMAT"}}</p>
+						</div>
+					</div>
+					{% endif %}
+					{% endif %}
+					
+					<div class="col-lg-5">
+						<div class="form-group">
+							
+							<div><label>Municipio:</label> {{parcela.municipio}}({{parcela.municipio.CodMunicipio}}) - {{parcela.provincia}} ({{parcela.provincia.CodProvincia}})</div>
+						</div>
+					</div>
+					
+					{% if parcela.Domicilio %}
+					<div class="col-lg-6">
+						<div class="form-group">
+							
+							<div><label>Domicilio:</label> {{parcela.Domicilio}} ({{parcela.CP}})</div>
+						</div>
+					</div>
+					{% endif %}
+					
+					{% if parcela.utmX %}
+					<div class="col-lg-3">
+						<div class="form-group">
+							<div><label>Coordenada UTM X:</label> {{parcela.utmX}}</div>
+						</div>
+					</div>
+					{% endif %}
+					{% if parcela.utmY %}
+					<div class="col-lg-3">
+						<div class="form-group">
+							<div><label>Coordenada UTM Y:</label> {{parcela.utmY}}</div>
+						</div>
+					</div>
+					{% endif %}
+
+					
+					{% if parcela.ag_eco == 'SI' %}
+					{% if not producto %}
+					{% if parcela.declar_pac == 'NO' %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div class="text-danger"><strong>No tiene declaración PAC</strong></div>
+						</div>
+					</div>
+					{% elif parcela.declar_pac == 'SI' %}
+					<div class="col-lg-3">
+						<div class="form-group">
+							<div class="text-success"><strong>Tiene declaración PAC</strong></div>
+						</div>
+					</div>
+					{% endif %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div><label>Inscripción en A.ecológica:</label> {{parcela.f_ag_ec_rec|date:"SHORT_DATE_FORMAT"}}</div>
+						</div>
+					</div>
+					{% else %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div><label>Inscripción en A.ecológica:</label> {{parcela.f_ag_eco_prod|date:"SHORT_DATE_FORMAT"}}</div>
+						</div>
+					</div>
+					
+					{% if parcela.declar_pac == 'NO' %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div class="text-danger"><strong>No tiene declaración PAC</strong></div>
+						</div>
+					</div>
+					{% elif parcela.declar_pac == 'SI' %}
+					<div class="col-lg-3">
+						<div class="form-group">
+							<div class="text-success"><strong>Tiene declaración PAC</strong></div>
+						</div>
+					</div>
+					{% endif %}
+					{% endif %}
+					
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div><label>Inicio de control:</label> {{parcela.f_control|date:"SHORT_DATE_FORMAT"}}</div>
+						</div>
+					</div>
+					{% else %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div class="text-danger"><label>Producción NO Ecológica</label></div>
+						</div>
+					</div>
+					{% endif %}
+					
+					{% if parcela.tipoCom %}
+					<div class="col-lg-12">
+						<div class="form-group">
+							<div><label>Tipo de comercialización:</label> {{comercializacion}}</div>
+						</div>
+					</div>
+					{% endif%}
+					{% if producto %}
+						{% if parcela.matriculaRIA != 'NO PROCEDE' %}
+						<div class="col-lg-4">
+							<div class="form-group">
+								<div><label>Número de matrícula en el RIA:</label> {{parcela.matriculaRIA}}</div>
+							</div>
+						</div>
+						<div class="col-lg-4">
+							<div class="form-group">
+								<div><label>Número de registro sanitario:</label> {{parcela.regSanit}}</div>
+							</div>
+						</div>
+						{% endif %}
+					{% endif %}
+					{% if parcela.regEmbotella %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div><label>Número de registro embotelladora:</label> {{parcela.regEmbotella}}</div>
+						</div>
+					</div>
+					{% endif %}
+					
+					{% if parcela.expedienteGanado %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div><label>Código REGA:</label> {{parcela.codExplotREGA}}</div>
+						</div>
+					</div>
+					<div class="col-lg-8">
+						<div class="form-group">
+							<div><label>Grupo de cultivo:</label> {{grupoCultivo}}</div>
+						</div>
+					</div>
+					{% endif %}
+					{% if not producto %}
+					<div class="col-lg-2">
+						<div class="form-group">
+							<div><label>Polígono:</label> {{parcela.poligono}}</div>
+						</div>
+					</div>
+					<div class="col-lg-2">
+						<div class="form-group">
+							
+							<div><label>Parcela:</label> {{parcela.parcela}}</div>
+						</div>
+					</div>
+					<div class="col-lg-2">
+						<div class="form-group">
+							
+							<div><label>Recinto:</label> {{parcela.recinto}}</div>
+						</div>
+					</div>
+					
+					<div class="col-lg-3">
+						<div class="form-group">
+							
+							<div><label>Superficie:</label> {{parcela.superficie_hectareas}} ha</div>
+						</div>
+					</div>
+					
+					<div class="col-lg-3">
+						<div class="form-group">
+							
+							<div><label>SR:</label> {{secreg}}</div>
+						</div>
+					</div>
+					{% endif %}
+					{% if producto %}
+					<div class="col-lg-12">
+						<div class="form-group">
+							<div><label>Producto:</label> {{producto.producto.Actividad}}</div>
+							{% if parcela.desc_product %}
+								<div><label>Descripción del producto:</label> {{parcela.desc_product}}</div>
+							{% endif %}
+						</div>
+					</div>
+						{% if parcela.form_pres %}
+							<div class="col-lg-4">
+								<div class="form-group">
+									<div><label>Forma de presentación:</label> {{presentacion}}</div>
+								</div>
+							</div>
+						{% endif %}
+						{% if parcela.capacidad %}
+							<div class="col-lg-4">
+								<div class="form-group">
+									<div><label>Capacidad de producción:</label> {{parcela.capacidad}} Kg</div>
+								</div>
+							</div>
+						{% endif %}
+						{% if parcela.valor_produccion %}
+							<div class="col-lg-4">
+								<div class="form-group">
+									<div><label>Valor de la Comercialización:</label> {{parcela.valor_produccion}} €</div>
+								</div>
+							</div>
+						{% endif %}
+					
+					{% endif %}
+					{% if producto %}
+					<div class="col-lg-4">
+						<div class="table-responsive">
+							<table class="table table-bordered">
+								<thead>
+									<tr>
+										<th class="text-center">Tipos de Procesado</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for elemento in parcela.prodcts %}
+									<tr>
+										<td class="text-center">{{elemento.procesado}}</td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+					{% endif %}
+					
+					{% if producto %}
+					<div class="col-lg-4">
+						<div class="table-responsive">
+							<table class="table table-bordered">
+								<thead>
+									<tr>
+										<th class="text-center">Tamaños de los envases</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for elemento in parcela.envases %}
+									<tr>
+										<td class="text-center">{{elemento.cantidad}} {{elemento.medida}}</td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+					{% endif %}
+					{% if producto %}
+					<div class="col-lg-4">
+						<div class="table-responsive">
+							<table class="table table-bordered">
+								<thead>
+									<tr>
+										<th class="text-center">Marcas de referencia</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for elemento in parcela.marcas %}
+									<tr>
+										<td class="text-center">{{elemento.marca}}</td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+					{% endif %}
+					
+					
+					
+					{% if tipo == 'AE' %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							
+							<div><label>Cultivo:</label> {{parcela.prod_ag}}</div>
+						</div>
+					</div>
+					{% elif parcela.expedienteGanado %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							
+							<div><label>Producto:</label> {{parcela.prod_ag}}</div>
+						</div>
+					</div>
+					{% endif %}
+					{% if parcela.raza %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div><label>Raza animal:</label> {{parcela.raza}}</div>
+						</div>
+					</div>
+					{% endif %}
+					{% if parcela.animales %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div><label>Número de animales/colmenas:</label> {{parcela.animales}}</div>
+						</div>
+					</div>
+					{% endif %}
+					{% if parcela.regApicola %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div><label>Número en el registro apícola:</label> {{parcela.regApicola}}</div>
+						</div>
+					</div>
+					{% endif %}
+					{% if parcela.regAcuicola %}
+					<div class="col-lg-6">
+						<div class="form-group">
+							<div><label>Número de registro de establecimiento de acuicultura:</label> {{parcela.regAcuicola}}</div>
+						</div>
+					</div>
+					{% endif %}
+					{% if parcela.tipoAcuicola %}
+					<div class="col-lg-4">
+						<div class="form-group">
+							<div><label>Tipo de estructura acuícola:</label> {{tipoAcuicola}}</div>
+						</div>
+					</div>
+					{% endif %}
+					
+					{% if parcela.expedienteGanado %}
+					<div class="col-lg-12">
+						<div class="form-group">
+							<div><label>Volumen de producción estimado:</label> {{parcela.produccion}} Kg</div>
+						</div>
+					</div>
+					{% endif %}
+					{% if parcela.variedad %}
+						{% if parcela.variedad.id != 818 %}
+							<div class="col-lg-3">
+								<div class="form-group">
+									
+									<div><label>Variedad:</label> {{parcela.variedad}}</div>
+								</div>
+							</div>
+						{% endif %}
+					{% endif %}
+					
+					{% if tipo == 'AE' %}
+					<div class="col-lg-3">
+						<div class="form-group">
+							<div><label>Cosecha anual:</label> {{parcela.cosecha_anual}}</div>
+						</div>
+					</div>
+					{% endif %}
+					
+					
+
+				</div> 
+				
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary pull-right" ng-click="modifica('{{parcela.municipio.id}}')"><i class="fa fa-gear"></i> Modificar Parcela</button>
+				</div>
+
+			</div>
+			</div>
+			<div ng-hide="nomodifica">
+				<div class="panel panel-info">
+				<div class="panel-heading">
+					{% if not producto %}
+					Modifica parcela
+					{% else %}
+					Modifica producto
+					{% endif %}
+				</div>
+				<div class="panel-body">
+					<div class="row">
+					<form id="formularioParcela"class="css-form" name="formularioParcela" role="form" action="." method="POST">{% csrf_token %}
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Producción ecológica</label>
+								<select id="eco" class="form-control" name="eco" ng-model="parcela.eco" required>
+									<option value="SI">SI</option>
+									<option value="NO">NO</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label>Estado*</label>
+								<select id="eco" class="form-control" name="eco" ng-model="parcela.estado" required>
+									<option value="ALTA">ALTA</option>
+									<option value="BAJA">BAJA</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-3 has-error" ng-show="parcela.estado == 'BAJA'">
+							<div class="form-group">
+								<label class="control-label" for="inputError1">Fecha de Baja*</label>
+								<input id="fbaja" type="date" class="form-control" name="fbaja" ng-model="parcela.fbaja" required>
+							</div>
+						</div>
+						{% if tipo != 'IN' %}
+						<div class="col-lg-3" ng-show="parcela.eco == 'SI'">
+							<div class="form-group">
+								<label>Fecha de Inscripción en AE*</label>
+								<input id="finscrip" type="date" class="form-control" name="finscrip" ng-model="parcela.finscrip" required>
+							</div>
+						</div>
+						{% endif %}
+						
+						{% if producto %}
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>¿Está inscrito en el RIA?</label>
+								<select id="RIA" class="form-control" name="RIA" ng-model="RIA" required>
+									<option value="SI">SI</option>
+									<option value="NO">NO</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-3" ng-show="RIA == 'SI'">
+							<div class="form-group">
+								<label>Matrícula RIA*(xx/yyyyy)</label>
+								<input id="matRIA" class="form-control" name="matRIA" ng-model="matRIA" ng-change="cambiaRIA()" required ng-maxlength=12 pattern="\d{2}/\d{5}">
+							</div>
+						</div>
+						{% endif %}
+						
+						<div class="col-lg-12">
+							<div class="form-group">
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								{% if tipo != 'IN' %}
+									<label>Provincia*</label>
+								{% else %}
+									<label ng-show="RIA == 'NO'">Provincia*</label>		
+									<label ng-show="RIA == 'SI'|| !RIA">Provincia</label>
+								{% endif %}
+									<select class="form-control" name="provincia" ng-model="provinciaSeleccionada" required>
+										{% for provincia in provincias %}
+										<option value="{{provincia.id}}">{{provincia.CodProvincia}} - {{provincia.Provincia}}</option>
+										{% endfor %}
+									</select>
+							</div>
+						</div>
+												
+						<div class="col-lg-5">
+							<div class="form-group">
+								{% if tipo != 'IN' %}
+									<label>Municipio*</label>
+								{% else %}
+									<label ng-show="RIA == 'NO'">Municipio*</label>		
+									<label ng-show="RIA == 'SI'|| !RIA">Municipio</label>
+								{% endif %}
+								<select id="municipio"class="form-control" name="municipio" ng-model="municipioSelecionado" required>
+									<option value ="{{parcela.municipio.id}}">{{parcela.municipio.CodMunicipio}} - {{parcela.municipio}}</option>
+									<option ng-repeat="municipio in municipios  | filter: {idProvincia: provinciaSeleccionada}" value="[[municipio.id]]">[[municipio.CodMunicipio]] - [[municipio.Municipio]]</option>
+								</select>
+							</div>
+						</div>
+						
+			
+						<div class="col-lg-12">
+							<div class="form-group">
+							</div>
+						</div>
+						
+						{% if tipo == 'IN' %}
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label ng-show="RIA == 'NO'">Domicilio*</label>
+								<label ng-show="RIA == 'SI' || !RIA">Domicilio</label>
+								<input id="domicilio" class="form-control" name="domicilio" ng-model="domicilio">
+							</div>
+						</div>
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label ng-show="RIA == 'NO'">CP*</label>
+								<label ng-show="RIA == 'SI' || !RIA">CP</label>
+								<input id="CP" class="form-control" name="CP" ng-model="CP" ng-minlength=5 ng-maxlength=5>
+							</div>
+						</div>
+						
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label ng-show="RIA == 'NO'">Coord. UTM X*</label>
+								<label ng-show="RIA == 'SI' || !RIA">Coord. UTM X</label>
+								<input id="utmx" class="form-control" name="utmx" ng-model="utmx">
+							</div>
+						</div>
+						
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label ng-show="RIA == 'NO'">Coord. UTM Y*</label>
+								<label ng-show="RIA == 'SI' || !RIA">Coord. UTM Y</label>
+								<input id="utmy" class="form-control" name="utmy" ng-model="utmy">
+							</div>
+						</div>
+						
+						<div class="col-lg-12" ng-show="RIA == 'SI'">
+							<div class="form-group">
+							</div>
+						</div>
+						
+						<div class="col-lg-2" ng-show="RIA == 'SI'">
+							<div class="form-group">
+								<label>Registro Sanitario*</label>
+								<input id="regSan" class="form-control" name="regSan" ng-model="regSan" required ng-maxlength=13>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Registro Embotelladora</label>
+								<input id="regEmb" class="form-control" name="regEmb" ng-model="regEmb" ng-maxlength=10>
+							</div>
+						</div>
+						
+						{% else %}
+						<div class="col-lg-2">
+							<div class="form-group">
+								<label>Polígono*</label>
+								<input class="form-control" name="poligono" ng-model="parcela.poligono" required ng-minlength=1 ng-maxlength=3>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Parcela*</label>
+								<input class="form-control" name="parcela" ng-model="parcela.parcela" required ng-minlength=1 ng-maxlength=5>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Recinto/s*</label>
+								<input class="form-control" name="recinto" ng-model="parcela.recinto" required ng-minlength=1 ng-maxlength=5>
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Superficie (ha)*</label>
+								<input class="form-control" name="superficie" ng-model="parcela.superficie" required>
+							</div>
+						</div>
+						{% endif %}
+						
+						<div class="col-lg-12">
+							<div class="form-group">
+								
+							</div>
+						</div>
+						{% if parcela.expedienteGanado %}
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Código REGA de la explotación*</label>
+								<input id = "codigoExplotacion" class="form-control" name="codigoExplotacion" ng-model="codigoExplotacion" required ng-minlength=14 ng-maxlength=14 pattern="^ES\d{12}$" placeholder="ES123456789123">
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Grupo de cultivo*</label>
+								<select class="form-control" name="grupoCultivo" ng-model="grupoCultivo" required>
+									<option value="1">Dehesa</option>
+									<option value="2">Pradera</option>
+									<option value="3">Pasto</option>
+									<option value="4">Pastizal</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-12">
+
+						</div>
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Actividad Genérica*</label>
+								<select class="form-control" name="actgen2" ng-model="ActGen2" required>
+								{% for actividad2 in actgen2 %}
+									<option value="{{actividad2}}">{{actividad2}}</option>
+								{% endfor %}
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Orientación Productiva*</label>
+								<select class="form-control" name="productoGan" ng-model="productoGan" required>
+									<option value="[[productoGan2]]" selected>[[NombreProduct]]</option>
+									<option ng-repeat="orientacion in orientaciones | filter: {Actividad: ActGen2}| orderBy:'Producto'" value="[[orientacion.CodProducto]]">[[orientacion.Producto]]</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-12">
+							<div class="form-group">
+							<button ng-hide="bajaCultivo"type="button" class="btn btn-danger" ng-click="Baja()">Dar de Baja Producto</button>
+							</div>
+						</div>
+						
+						<div class="col-lg-12" ng-show="bajaCultivo">
+				
+						<div class="col-lg-4 has-error">
+							<div class="form-group">
+								<label class="control-label" for="inputError1">Fecha alta del nuevo producto*</label>
+								<input id="faltaproducto" type="date" class="form-control" name="faltaproducto" ng-model="faltaproducto" required>
+							</div>
+						</div>
+						
+						<div class="col-lg-4 has-error">
+							<div class="form-group">
+								<label class="control-label" for="inputError1">Fecha baja del nuevo producto*</label>
+								<input id="fbajaproducto" type="date" class="form-control" name="fbajaproducto" ng-model="fbajaproducto" required>
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								</br>
+								<button ng-show="bajaCultivo" type="button" class="btn btn-danger" ng-click="cancelar()">Cancelar</button>
+							</div>
+						</div>
+						
+						
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Raza animal</label>
+								<input id = "Raza" class="form-control" name="Raza" ng-model="Raza">
+							</div>
+						</div>
+						
+						
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Número de animales/colmenas</label>
+								<input id="animales" class="form-control" name="animales" ng-model="animales">
+							</div>
+						</div>
+						
+						
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Número en el registro apícola</label>
+								<input id="regApicola" class="form-control" name="regApicola" ng-model="regApicola">
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Número de registro de acuicultura</label>
+								<input id="regAcuicola" class="form-control" name="regAcuicola" ng-model="regAcuicola">
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Tipo de estructura</label>
+								<select class="form-control" name="tipoAcuicola" ng-model="tipoAcuicola" required>
+									<option value="1">Estanque</option>
+									<option value="2">Estero</option>
+									<option value="3">Jaula</option>
+									<option value="4">Otra estructura fija</option>
+									<option value="5">Otra estructura móvil</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Coordenada UTM X</label>
+								<input id="UtmX" class="form-control" name="UtmX" ng-model="UtmX">
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Coordenada UTM Y</label>
+								<input id="UtmY" class="form-control" name="UtmY" ng-model="UtmY">
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Volumen de producción estimado(Kg) > 0*</label>
+								<input id="Produccion" class="form-control" name="Produccion" ng-model="Produccion">
+							</div>
+						</div>
+						{% endif %}
+						{% if tipo == 'IN' %}
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Tipos de Procesado*</label>
+								<ul class="list-group">
+								  <li class="list-group-item"><input id="elaboracion" ng-model="Elaboracion" type="checkbox" value="E"> Elaboración</li>
+								  <li class="list-group-item"><input id="envasado" ng-model="Envasado" type="checkbox" value="X"> Envasado</li>
+								  <li class="list-group-item"><input id="comercializacion" ng-model="Comercializacion" type="checkbox" value="C"> Comercialización</li>
+								  <li class="list-group-item"><input id="importacion" ng-model="Importacion" type="checkbox" value="I"> Importación</li>
+								  <li class="list-group-item"><input id="exportacion" ng-model="Exportacion" type="checkbox" value="P"> Exportación</li>
+								</ul>
+							</div>
+						</div>
+						
+						<div class="col-lg-9">
+							<div class="col-lg-9 col-lg-4">
+							<div class="form-group">
+								<label>Tipo Comercialización*</label>
+								<select class="form-control" name="tipoCom" ng-model="tipoCom" required>
+									<option value=1>Mayorista</option>
+									<option value=2>Minorista</option>
+								</select>	
+							</div>
+							</div>
+							<div class="col-lg-9 col-lg-4">
+							<div class="form-group">
+								<label>Actividad Genérica*</label>
+								<select class="form-control" name="actgen" ng-model="ActGen" ng-change="cambiaProducto()" required>
+								{% for actividad in actgenIn %}
+									<option value="{{actividad}}">{{actividad}}</option>
+								{% endfor %}
+								</select>
+							</div>
+							</div>
+							<div class="col-lg-9 col-lg-4">
+							<div class="form-group">
+								<label>Producto*</label>
+								<select class="form-control" name="prodtIndustria" ng-model="prodtIndustria" ng-change="cambiaProducto()" required>
+									<option id="prodDefecto" value="{{parcela.producto.CodActividad}}">{{parcela.producto.Actividad}}</option>
+									<option ng-repeat="producto in productosIndustria | filter: {Producto: ActGen}| orderBy:'Actividad'" value="[[producto.CodActividad]]">[[producto.Actividad]]</option>
+								</select>
+							</div>
+							</div>
+							<div class="col-lg-12">
+								<div class="form-group">
+									<button ng-hide="bajaCultivo"type="button" class="btn btn-danger pull-right" ng-click="Baja()">Dar de Baja Producto</button>
+								</div>
+							</div>
+							
+							<div class="col-lg-12" ng-show="bajaCultivo">
+					
+							<div class="col-lg-4 has-error">
+								<div class="form-group">
+									<label class="control-label" for="inputError1">Fecha alta del nuevo producto*</label>
+									<input id="faltaproducto" type="date" class="form-control" name="faltaproducto" ng-model="faltaproducto" required>
+								</div>
+							</div>
+							
+							<div class="col-lg-4 has-error">
+								<div class="form-group">
+									<label class="control-label" for="inputError1">Fecha baja del nuevo producto*</label>
+									<input id="fbajaproducto" type="date" class="form-control" name="fbajaproducto" ng-model="fbajaproducto" required>
+								</div>
+							</div>
+							
+							<div class="col-lg-4">
+								<div class="form-group">
+									</br>
+									<button ng-show="bajaCultivo" type="button" class="btn btn-danger" ng-click="cancelar()">Cancelar</button>
+								</div>
+							</div>
+							
+							
+							</div>
+							<div class="col-lg-9 col-lg-12">
+							<div class="form-group">
+								<label>Descripción del Producto</label>
+								<textarea class="form-control" rows="3" ng-model="descripcion"></textarea>
+							</div>
+							</div>
+							<div class="col-lg-9 col-lg-4">
+							<div class="form-group">
+								<label>F. inscripción producto AE*</label>
+								<input id="f_ins_ae" type="date" class="form-control" name="f_ins_ae" ng-model="f_ins_ae" required>
+							</div>
+							</div>
+							<div class="col-lg-9 col-lg-4">
+							<div class="form-group">
+								<label>Capacidad de producción(Kilos)*</label>
+								<input id="c_prod" class="form-control" name="c_prod" ng-model="c_prod" required>
+							</div>
+							</div>
+						</div>
+						<div class="col-lg-12">
+						</div>
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Tamaños envases*</label>
+								<ul class="list-group">
+									<li class="list-group-item">
+										<div class="input-group">
+											<input type="text" class="form-control" placeholder="Indique cantidad" ng-model="cant_tam" pattern="\d+(.\d{1,3})?">
+											  <span class="input-group-btn">
+												<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">[[medida]] <span class="caret"></span></button>
+												<ul class="dropdown-menu dropdown-menu-right">
+												  <li><a href="#" ng-click="anadeMedida('g','G')">Gramos</a></li>
+												  <li><a href="#" ng-click="anadeMedida('l','L')">Litros</a></li>
+												  <li><a href="#" ng-click="anadeMedida('kg','K')">Kilogramos</a></li>
+												  <li><a href="#" ng-click="anadeMedida('ml','M')">Mililitros</a></li>
+												</ul>
+												<button class="btn btn-default" type="button" ng-click="anadeTamanyo()"><i class="fa fa-plus-circle"></i></button>
+											  </span>
+										</div>
+									</li>
+									<li ng-repeat="tamanyo in tamanyos" class="list-group-item">
+									<a href="#" ng-click="eliminaTamanyo(tamanyo.id)"><i class="fa fa-trash-o text-danger"></i></a> [[tamanyo.cantidad]] [[tamanyo.medida]]</li>
+								</ul>
+							</div>
+						</div>
+						<div class="col-lg-9">
+							<div class="col-lg-9 col-lg-4">
+								<div class="form-group">
+									<label>Forma de presentación*</label>
+									<select class="form-control" name="for_pres" ng-model="for_pres" required>
+										<option value=1>A granel</option>
+										<option value=2>Envasado cerrado</option>
+										<option value=3>Otros</option>
+									</select>	
+									</br>
+									<label>Valor comercialización*</label>
+									<div class="input-group">
+										  <input type="text" class="form-control" ng-model="v_comer" required pattern="\d+(.\d{1,2})?">
+										  <span class="input-group-addon">€</span>
+									</div>
+
+								</div>
+							</div>
+
+							<div class="col-lg-9 col-lg-6">
+								<div class="form-group">
+									<label>Marcas de Referencia*</label>
+									<ul class="list-group">
+										<li class="list-group-item">
+											<div class="input-group">
+												<input type="text" class="form-control" placeholder="Añadir marca de referencia" ng-model="m_ref">
+												  <span class="input-group-btn">
+													<button class="btn btn-default" type="button" ng-click="anadeMarca()"><i class="fa fa-plus-circle"></i></button>
+												  </span>
+											</div>
+										</li>
+										<li ng-repeat="marca in marcas" class="list-group-item">
+										<a href="#" ng-click="eliminaMarca(marca.id)"><i class="fa fa-trash-o text-danger"></i></a>	[[marca.marca]]</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+						{% endif %}
+						
+						{% if tipo == 'AE' %}
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Actividad Genérica*</label>
+								<select class="form-control" name="actgen" ng-model="parcela.ActGen" required>
+								{% for actividad in actgen %}
+									<option value="{{actividad}}">{{actividad}}</option>
+								{% endfor %}
+								</select>
+							</div>
+						</div>
+
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Cultivo*</label>
+								<select id="cultivo" class="form-control" name="cultivo" ng-model="parcela.cultivo" required>
+									<option ng-repeat="cultivo in cultivos | filter: {Actividad: parcela.ActGen}" value="[[cultivo.CodCultivo]]">[[cultivo.Cultivo]]</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Variedad</label>
+								<select class="form-control" name="variedad" ng-model="vari">
+									<option ng-repeat="var in variedad | filter: {CodCultivo: parcela.cultivo}" value="[[var.id]]">[[var.Variedad]]</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+							<button ng-hide="bajaCultivo"type="button" class="btn btn-danger pull-right" ng-click="Baja()">Dar de Baja Cultivo</button>
+							</div>
+						</div>
+						
+						<div class="col-lg-12" ng-show="bajaCultivo">
+				
+						<div class="col-lg-4 has-error">
+							<div class="form-group">
+								<label class="control-label" for="inputError1">Fecha alta del nuevo cultivo*</label>
+								<input id="faltaproducto" type="date" class="form-control" name="faltaproducto" ng-model="faltaproducto" required>
+							</div>
+						</div>
+						
+						<div class="col-lg-4 has-error">
+							<div class="form-group">
+								<label class="control-label" for="inputError1">Fecha baja del nuevo cultivo*</label>
+								<input id="fbajaproducto" type="date" class="form-control" name="fbajaproducto" ng-model="fbajaproducto" required>
+							</div>
+						</div>
+						
+						<div class="col-lg-4">
+							<div class="form-group">
+								</br>
+								<button ng-show="bajaCultivo" type="button" class="btn btn-danger" ng-click="cancelar()">Cancelar</button>
+							</div>
+						</div>
+						
+						
+						</div>
+						{% endif %}
+						
+						<div ng-show="parcela.eco == 'SI' ">
+						
+						<div class="col-lg-12">
+							<div class="form-group">
+								<h5>¿Tiene declaración PAC?
+								<label class="text-success">SI<input id="dpac" type="radio" ng-model="parcela.dpac" value="SI"></label>
+												&nbsp;&nbsp;&nbsp;
+								<label class="text-danger">NO<input id="dpac" type="radio" ng-model="parcela.dpac" value="NO"></label></h5>
+							</div>
+						</div>
+						{% if tipo != 'IN' %}
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>SR*</label>
+								<select class="form-control" name="sr" ng-model="parcela.sr" required>
+									<option value="S">Secano</option>
+									<option value="R">Regadío</option>
+								</select>
+							</div>
+						</div>
+						{% endif %}
+						{% if tipo == 'AE'%}
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Cosecha anual*</label>
+								<input class="form-control" name="cosecha" ng-model="parcela.cosecha" required>
+							</div>
+						</div>
+						{% endif %}
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Fecha de inicio de control*</label>
+								<input id="fcontrol" type="date" class="form-control" name="fcontrol" ng-model="parcela.fcontrol" required>
+							</div>
+						</div>
+						{% if tipo != 'IN' %}
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label>Calificación*</label>
+								<select class="form-control" name="calificacion" ng-model="parcela.calificacion" required>
+									<option value="1">Primer año en prácticas</option>
+									<option value="2">Período conversión</option>
+									<option value="3">Agricultura Ecológica</option>
+								</select>
+							</div>
+						</div>
+						
+						<div class="col-lg-3">
+							<div class="form-group">
+								<label>Fecha de calificación*</label>
+								<input id="fcalif" type="date" class="form-control" name="fcalif" ng-model="parcela.fcalif" required>
+							</div>
+						</div>
+						{% endif %}
+
+						</div>
+						
+						
+						
+					</form>
+				</div>
+				</div>
+				
+				<div class="modal-footer">
+					{% if parcela.expediente %}
+					<button type="button" class="btn btn-warning pull-right" ng-click="guardarDatos('{{parcela.id}}','{{parcela.expediente.id}}','{{tipo}}')"><i class="fa fa-save"></i> Guardar</button>
+					{% elif parcela.expedienteGanado %}
+					<button type="button" class="btn btn-warning pull-right" ng-click="guardarDatos('{{parcela.id}}','{{parcela.expedienteGanado.id}}','{{tipo}}')"><i class="fa fa-save"></i> Guardar</button>
+					{% endif %}
+				</div>
+				
+				</div>
+			</div>
+			
+			</div>
+
+			
+			
+		</div>
+	</div>
+	</section>
+</div>
+{% endblock %}
